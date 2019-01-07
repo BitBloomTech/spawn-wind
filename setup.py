@@ -18,10 +18,8 @@ from setuptools import setup, find_packages
 
 install_requires = [
     'spawn-core',
-    'wetb',
-    'setuptools>=38.3',
-    'click',
-    'appdirs'
+    'wetb==0.0.9',
+    'setuptools>=38.3'
 ]
 
 tests_require = [

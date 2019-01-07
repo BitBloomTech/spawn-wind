@@ -17,11 +17,11 @@
 from os import path
 import tempfile
 import pytest
-from spawn.plugins.wind.nrel import TurbsimSpawner, FastSimulationSpawner, FastInput, TurbsimInput, WindGenerationTask
 from spawn.config.command_line import CommandLineConfiguration
 from spawn.schedulers.luigi import LuigiScheduler
 from spawn.parsers import SpecificationParser, DictSpecificationProvider
 
+from spawnwind.nrel import TurbsimSpawner, FastSimulationSpawner, FastInput, TurbsimInput, WindGenerationTask
 
 @pytest.fixture(scope='function')
 def turbsim_input(examples_folder):

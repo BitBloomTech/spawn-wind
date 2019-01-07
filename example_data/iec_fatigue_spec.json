@@ -1,0 +1,32 @@
+{
+  "generators": {
+    "TurbulenceSeed": {
+      "method": "IncrementalInt"
+    }
+  },
+  "spec": {
+    "simulation_time": 600,
+    "wind_shear": 0.14,
+    "dlc1.2": {
+      "policy:path": "WS_{wind_speed}/WD_{wind_direction}",
+      "operation_mode": "normal",
+      "wind_speed": [4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0, 22.0, 24.0, 26.0],
+      "wind_direction": [-10.0, 0.0, 10.0],
+      "turbulence_seed": "@TurbulenceSeed"
+    },
+    "dlc6.4": {
+      "policy:path": "WS_{wind_speed}/WD_{wind_direction}",
+      "operation_mode": "idling",
+      "wind_speed": [4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0, 22.0, 24.0, 26.0],
+      "wind_direction": [-8.0, 8.0],
+      "turbulence_seed": "@TurbulenceSeed"
+    },
+    "dlc7.2": {
+      "policy:path": "WS_{wind_speed}/R_{rotor_azimuth}",
+      "operation_mode": "parked",
+      "wind_speed": [4.0, 6.0, 8.0, 10.0, 12.0, 14.0, 16.0, 18.0, 20.0, 22.0, 24.0, 26.0],
+      "rotor_azimuth": [0, 30, 90],
+      "turbulence_seed": "@TurbulenceSeed"
+    }
+  }
+}

@@ -1,0 +1,290 @@
+{
+  "generators": {
+    "TurbulenceSeed": {
+      "method": "IncrementalInt"
+    }
+  },
+  "macros": {
+    "Vin": 4,
+    "Vrated_m2": 8,
+    "Vrated": 10,
+    "Vrated_p2": 12,
+    "Vout": 25,
+    "Vmaint": 10,
+    "Vref": 50.0,
+    "Vref_70pc": 35,
+    "Vmean": 10.0,
+    "Ve1": 56,
+    "Ve50": 70,
+    "Iref": 14.0,
+    "WindRangeOperating": "#range($Vin, $Vout, 2)",
+    "WindRangeParked": "#range(2, 0.7 * $Vref, 2)",
+    "YawRange": [-10.0, 0.0, 10.0],
+    "YawRange360": "#range(-165, 180, 15)",
+    "FinePitch": 0.0,
+    "FeatherPitch": 90.0,
+    "IdlingPitch": 90.0,
+    "Startup": {
+      "initial_pitch": "$FeatherPitch",
+      "final_pitch": "$FinePitch",
+      "pitch_manoeuvre_rate": -6.0
+    },
+    "Shutdown": {
+      "initial_pitch": "$FinePitch",
+      "final_pitch": "$FeatherPitch",
+      "pitch_manoeuvre_rate": 8.0
+    }
+  },
+  "spec": {
+    "output_start_time": 30,
+    "wind_shear": 0.14,
+    "fatigue": {
+      "policy:path": "fatigue",
+      "dlc1.2": {
+        "policy:path": "dlc1.2/WS_{wind_speed}/yaw{initial_yaw:1}",
+        "simulation_time": 600,
+        "wind_speed": "$WindRangeOperating",
+        "turbulence_intensity": "#NTM($Iref, !wind_speed)",
+        "turbulence_seed": "#repeat(@TurbulenceSeed, 6)",
+        "initial_yaw": "$YawRange"
+      },
+      "dlc2.4": {
+        "policy:path": "dlc2.4/WS_{wind_speed}/yaw{initial_yaw:1}",
+        "simulation_time": 600,
+        "wind_speed": "$WindRangeOperating",
+        "initial_yaw": [-20, 20],
+        "turbulence_intensity": "#NTM($Iref, !wind_speed)",
+        "turbulence_seed": "#repeat(@TurbulenceSeed, 3)"
+      },
+      "dlc3.1": {
+        "policy:path": "dlc3.1/yaw{initial_yaw:1}",
+        "operation_mode": "idling",
+        "initial_pitch": "$IdlingPitch",
+        "transient": "$Startup",
+        "simulation_time": 100,
+        "wind_file": [
+          "example_data/fast_input_files/wind_files/NWP4.0.wnd",
+          "example_data/fast_input_files/wind_files/NWP12.0.wnd",
+          "example_data/fast_input_files/wind_files/NWP24.0.wnd"
+        ],
+        "initial_yaw": "$YawRange"
+      },
+      "dlc4.1": {
+        "policy:path": "dlc4.1/WS{wind_file:1}",
+        "operation_mode": "normal",
+        "transient": "$Shutdown",
+        "pitch_manoeuvre_time": 40.0,
+        "simulation_time": 100,
+        "wind_file": [
+          "example_data/fast_input_files/wind_files/NWP4.0.wnd",
+          "example_data/fast_input_files/wind_files/NWP12.0.wnd",
+          "example_data/fast_input_files/wind_files/NWP24.0.wnd"
+        ],
+        "initial_yaw": "$YawRange"
+      },
+      "dlc6.4": {
+        "policy:path": "dlc6.4/WS_{wind_speed}/yaw{initial_yaw:1}",
+        "operation_mode": "parked",
+        "initial_pitch": "$FeatherPitch",
+        "wind_speed": "$WindRangeParked",
+        "turbulence_intensity": "#NTM($Iref, !wind_speed)",
+        "initial_yaw": "$YawRange"
+      }
+    },
+    "extreme": {
+      "policy:path": "extreme",
+      "dlc1": {
+        "operation_mode": "normal",
+        "_safety_factor": "$Normal",
+        "a": {
+          "simulation_time": 600,
+          "wind_speed": "$WindRangeOperating",
+          "turbulence_seed": "#repeat(@TurbulenceSeed, 6)",
+          "initial_yaw": "$YawRange",
+          "dlc1.1": {
+            "policy:path": "dlc1.1/WS_{wind_speed}/yaw{initial_yaw:1}",
+            "turbulence_intensity": "#NTM($Iref, !wind_speed)"
+          },
+          "dlc1.3": {
+            "policy:path": "dlc1.3/WS_{wind_speed}/yaw{initial_yaw:1}",
+            "turbulence_intensity": "#ETM($Iref, $Vmean, !wind_speed)"
+          }
+        },
+        "dlc1.4": {
+          "policy:path": "dlc1.4",
+          "simulation_time": 100,
+          "wind_file": [
+            "example_data/fast_input_files/wind_files/ECD+r-2.0.wnd",
+            "example_data/fast_input_files/wind_files/ECD+r.wnd",
+            "example_data/fast_input_files/wind_files/ECD+r+2.0.wnd",
+            "example_data/fast_input_files/wind_files/ECD-r-2.0.wnd",
+            "example_data/fast_input_files/wind_files/ECD-r.wnd",
+            "example_data/fast_input_files/wind_files/ECD-r+2.0.wnd"
+          ]
+        },
+        "dlc1.5": {
+          "policy:path": "dlc1.5",
+          "simulation_time": 100,
+          "wind_file": [
+            "example_data/fast_input_files/wind_files/EWSV+12.0.wnd",
+            "example_data/fast_input_files/wind_files/EWSV+24.0.wnd",
+            "example_data/fast_input_files/wind_files/EWSV-12.0.wnd",
+            "example_data/fast_input_files/wind_files/EWSV-24.0.wnd"
+          ]
+        }
+      },
+      "dlc2": {
+        "operation_mode": "normal",
+        "simulation_time": 100,
+        "dlc2.1": {
+          "policy:path": "dlc2.1/WS_{wind_speed}/yaw{initial_yaw:1}",
+          "wind_speed": "$WindRangeOperating",
+          "initial_yaw": "$YawRange",
+          "grid_loss_time": 40.0,
+          "turbulence_seed": "#repeat(@TurbulenceSeed, 4)",
+          "_safety_factor": "$Normal"
+        },
+        "dlc2.2p": {
+          "policy:path": "dlc2.2/runaway/WS_{wind_speed}",
+          "simulation_time": 100,
+          "wind_speed": "#range(12, 24, 2)",
+          "turbulence_seed": "#repeat(@TurbulenceSeed, 12)",
+          "blade_pitch_manoeuvre_time[1]": 40.0,
+          "pitch_manoeuvre_rate": 8.0,
+          "blade_final_pitch[1]": "$FeatherPitch",
+          "_safety_factor": "$Abnormal"
+        },
+        "dlc2.2y": {
+          "policy:path": "dlc2.2/yaw/WS_{wind_speed}/yaw{initial_yaw:1}",
+          "simulation_time": 600,
+          "wind_speed": "$WindRangeOperating",
+          "turbulence_seed": "@TurbulenceSeed",
+          "initial_yaw": "$YawRange360",
+          "_safety_factor": "$Abnormal"
+        },
+        "dlc2.2b": {
+          "policy:path": "dlc2.2/stuck/WS_{wind_speed}",
+          "simulation_time": 600,
+          "wind_speed": "$WindRangeOperating",
+          "turbulence_seed": "#repeat(@TurbulenceSeed, 12)",
+          "blade_initial_pitch[1]": "$FinePitch",
+          "_safety_factor": "$Abnormal"
+        },
+        "dlc2.3": {
+          "policy:path": "dlc2.3/WS{wind_file:1}",
+          "simulation_time": 100,
+          "wind_file": [
+            "example_data/fast_input_files/wind_files/EOGr-2.0.wnd",
+            "example_data/fast_input_files/wind_files/EOGr+2.0.wnd",
+            "example_data/fast_input_files/wind_files/EOGo.wnd"
+          ],
+          "grid_loss_time": [10, 12, 14, 16],
+          "_safety_factor": "$Abnormal"
+        }
+      },
+      "dlc3": {
+        "simulation_time": 100,
+        "_safety_factor": "$Normal",
+        "dlc3.2": {
+          "policy:path": "dlc3.2/WS{wind_file:1}",
+          "transient": "$Startup",
+          "pitch_manoeuvre_time": [40.0, 50.0, 60.0, 70.0],
+          "wind_file": [
+            "example_data/fast_input_files/wind_files/EOGi.wnd",
+            "example_data/fast_input_files/wind_files/EOGr-2.0.wnd",
+            "example_data/fast_input_files/wind_files/EOGr+2.0.wnd",
+            "example_data/fast_input_files/wind_files/EOGo.wnd"
+          ]
+        },
+        "dlc3.3": {
+          "policy:path": "dlc3.3/WS{wind_file:1}",
+          "transient": "$Startup",
+          "pitch_manoeuvre_time": [40.0, 50.0, 60.0, 70.0],
+          "wind_file": [
+            "example_data/fast_input_files/wind_files/EDC-i.wnd",
+            "example_data/fast_input_files/wind_files/EDC+i.wnd",
+            "example_data/fast_input_files/wind_files/EDC-r-2.0.wnd",
+            "example_data/fast_input_files/wind_files/EDC-r+2.0.wnd",
+            "example_data/fast_input_files/wind_files/EDC+r-2.0.wnd",
+            "example_data/fast_input_files/wind_files/EDC+r+2.0.wnd",
+            "example_data/fast_input_files/wind_files/EDC-o.wnd",
+            "example_data/fast_input_files/wind_files/EDC+o.wnd"
+          ]
+        }
+      },
+      "dlc4.2": {
+        "policy:path": "dlc4.2/WS{wind_file:1}",
+        "simulation_time": 100,
+        "transient": "$Shutdown",
+        "pitch_manoeuvre_time": [40.0, 50.0, 60.0, 70.0],
+        "wind_file": [
+          "example_data/fast_input_files/wind_files/EOGr-2.0.wnd",
+          "example_data/fast_input_files/wind_files/EOGr+2.0.wnd",
+          "example_data/fast_input_files/wind_files/EOGo.wnd"
+        ],
+        "_safety_factor": "$Normal"
+      },
+      "dlc5.1": {
+        "policy:path": "dlc5.1/WS_{wind_speed}",
+        "simulation_time": 100,
+        "wind_speed": ["$Vrated_m2", "$Vrated_p2", "$Vout"],
+        "turbulence_intensity": "#NTM($Iref, !wind_speed)",
+        "turbulence_seed": "#repeat(@TurbulenceSeed, 12)",
+        "_safety_factor": "$Normal"
+      },
+      "dlc6": {
+        "simulation_time": 600,
+        "operation_mode": "idling",
+        "initial_pitch": "$IdlingPitch",
+        "_safety_factor": "$Normal",
+        "turbulence_intensity": 11.0,
+        "wind_shear": 0.11,
+        "dlc6.1": {
+          "policy:path": "dlc6.1/yaw{initial_yaw:1}",
+          "wind_speed": "$Ve50",
+          "turbulence_seed": "#repeat(@TurbulenceSeed, 6)",
+          "initial_yaw": [-8, 8],
+          "_safety_factor": "$Normal"
+        },
+        "dlc6.2": {
+          "policy:path": "dlc6.2/yaw{initial_yaw:1}",
+          "wind_speed": "$Ve50",
+          "turbulence_seed": "@TurbulenceSeed",
+          "initial_yaw": "$YawRange360",
+          "_safety_factor": "$Abnormal"
+        },
+        "dlc6.3": {
+          "policy:path": "dlc6.3/yaw{initial_yaw:1}",
+          "wind_speed": "$Ve1",
+          "turbulence_seed": "#repeat(@TurbulenceSeed, 6)",
+          "initial_yaw": [-20, 20],
+          "_safety_factor": "$Normal"
+        }
+      },
+      "dlc7.1": {
+        "policy:path": "dlc7.1/yaw{initial_yaw:1}",
+        "simulation_time": 600,
+        "operation_mode": "parked",
+        "initial_pitch": "$FeatherPitch",
+        "wind_speed": "$Ve1",
+        "turbulence_intensity": 11.0,
+        "turbulence_seed": "@TurbulenceSeed",
+        "initial_azimuth": [0, 30, 90],
+        "initial_yaw": "$YawRange360",
+        "_saefty_factor": "$Abnormal"
+      },
+      "dlc8.1": {
+        "policy:path": "dlc8.1/yaw{initial_yaw:1}",
+        "simulation_time": 600,
+        "operation_mode": "parked",
+        "initial_pitch": "$FeatherPitch",
+        "wind_speed": "$Vmaint",
+        "turbulence_intensity": "#NTM($Iref, !wind_speed)",
+        "turbulence_seed": "#repeat(@TurbulenceSeed, 6)",
+        "initial_azimuth": 0,
+        "initial_yaw": [-8, 8],
+        "_saefty_factor": "$Normal"
+      }
+    }
+  }
+}

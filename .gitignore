@@ -1,0 +1,12 @@
+example_data/temp/
+*.egg-info
+*.pytest_cache
+\.idea/
+multiwindcalc/dist/
+multiwindcalc/temp/
+.*
+*.pyc
+**/temp/*
+docs/_build
+docs/api
+!.gitignore

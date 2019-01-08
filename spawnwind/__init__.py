@@ -16,5 +16,3 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 """Wind plugin for :mod:`spawn`
 """
-from .aeroelastic_simulation import AeroelasticSimulationSpawner
-from .wind_generation import WindGenerationSpawner

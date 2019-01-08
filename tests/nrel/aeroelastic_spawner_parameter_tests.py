@@ -64,6 +64,7 @@ def baseline(turbsim_input_file, fast_input_file):
     ('initial_rotor_speed', float),
     ('initial_azimuth', float),
     ('initial_yaw', float),
+    ('pitch_control_start_time', float),
     ('yaw_manoeuvre_time', float),
     ('final_yaw', float),
     ('number_of_blades', int)
@@ -152,6 +153,16 @@ def test_pitch_manoeuvre_one_blade(spawner, tmpdir):
     spawner.pitch_manoeuvre_rate = 1.0
     res = run_and_get_results(spawner, tmpdir)
     assert res['BldPitch1'].iloc[-1] == pytest.approx(12.0)
+
+
+def test_pitch_control_start_time(spawner, tmpdir):
+    spawner.simulation_time = 2.0
+    spawner.wind_speed = 16.0
+    spawner.pitch_control_start_time = 1.0
+    res = run_and_get_results(spawner, tmpdir)
+    pitch = np.array(res['BldPitch1'].values)
+    assert np.std(pitch[:9]) == 0.0
+    assert np.std(pitch[10:]) > 0.0
 
 
 def test_yaw_manoeuvre(spawner, tmpdir):

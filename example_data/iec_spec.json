@@ -61,6 +61,8 @@
         "operation_mode": "idling",
         "initial_pitch": "$IdlingPitch",
         "transient": "$Startup",
+        "pitch_manoeuvre_time": 40.0,
+        "pitch_control_start_time": "!pitch_manoeuvre_time + 10.0",
         "simulation_time": 100,
         "wind_file": [
           "example_data/fast_input_files/wind_files/NWP4.0.wnd",
@@ -189,6 +191,7 @@
           "policy:path": "dlc3.2/WS{wind_file:1}",
           "transient": "$Startup",
           "pitch_manoeuvre_time": [40.0, 50.0, 60.0, 70.0],
+          "pitch_control_start_time": "!pitch_manoeuvre_time + 10.0",
           "wind_file": [
             "example_data/fast_input_files/wind_files/EOGi.wnd",
             "example_data/fast_input_files/wind_files/EOGr-2.0.wnd",
@@ -200,6 +203,7 @@
           "policy:path": "dlc3.3/WS{wind_file:1}",
           "transient": "$Startup",
           "pitch_manoeuvre_time": [40.0, 50.0, 60.0, 70.0],
+          "pitch_control_start_time": "!pitch_manoeuvre_time + 10.0",
           "wind_file": [
             "example_data/fast_input_files/wind_files/EDC-i.wnd",
             "example_data/fast_input_files/wind_files/EDC+i.wnd",

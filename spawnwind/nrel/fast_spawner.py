@@ -224,6 +224,12 @@ class FastSimulationSpawner(AeroelasticSimulationSpawner):
         self._input['BlPitchF' + self._blade_string(index)] = angle
         self._reconcile_pitch_manoeuvre(index)
 
+    def get_pitch_control_start_time(self):
+        return float(self._input['TPCOn'])
+
+    def set_pitch_control_start_time(self, time):
+        self._input['TPCOn'] = time
+
     def _reconcile_pitch_manoeuvre(self, blade_number):
         if self._pitch_manoeuvre_rate is not None:
             bld = self._blade_string(blade_number)

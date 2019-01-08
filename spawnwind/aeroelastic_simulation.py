@@ -50,6 +50,7 @@ class AeroelasticSimulationSpawner(TaskSpawner):
     pitch_manoeuvre_rate = FloatProperty(doc='Pitch rate in deg/s at which pitch manoeuvre occurs', abstract=True)
     final_pitch = FloatProperty(doc='Pitch angle in degrees at which all blades finish after a pitch manoeuvre', abstract=True)
     blade_final_pitch = ArrayProperty(doc='Pitch angle in degrees at which one particular blade finishes after a pitch manoeuvre', abstract=True, type_=float)
+    pitch_control_start_time = FloatProperty(doc='Time in seconds at which pitch control is initiated', abstract=True)
     yaw_manoeuvre_time = FloatProperty(doc='Time in seconds at which a yaw manoeuvre occurs', abstract=True)
     yaw_manoeuvre_rate = FloatProperty(doc='Yaw rate in deg/s at which yaw manoeuvre occurs', abstract=True)
     final_yaw = FloatProperty(doc='Yaw angle in degrees at which the blade finishes after a yaw manoeuvre', abstract=True)

@@ -12,3 +12,5 @@ docs/api
 !.gitignore
 
 docs/spawner/
+
+docs/code_docs/

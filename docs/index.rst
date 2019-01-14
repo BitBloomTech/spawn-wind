@@ -13,6 +13,7 @@ Spawn wind is set up to use NREL's FAST v7.0.2 but can be adapted to other versi
     :hidden:
 
     user_guide/getting_started
-    spawner/*
+    user_guide/ini_guide
+    code_docs/*
 
-You will likely need the following documentation to get going with your first spawn-wind run using 
+Browse through the navigation bar to learn how to use Spawn wind.

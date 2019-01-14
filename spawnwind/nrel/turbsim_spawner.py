@@ -19,7 +19,7 @@
 from os import path, getcwd, makedirs
 import copy
 
-from spawnwind import WindGenerationSpawner
+from ..spawners import WindGenerationSpawner
 from .tasks import WindGenerationTask
 
 

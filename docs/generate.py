@@ -21,11 +21,13 @@ import shutil
 from sphinx.cmd.build import build_main as build
 
 GENERATED_RSTS = [
-    'spawnwind.spawners'
+    'spawnwind.spawners',
+    'spawnwind.nrel'
 ]
 
 TITLES = {
-    'spawnwind.spawners': 'Spawners'
+    'spawnwind.spawners': 'Spawners',
+    'spawnwind.nrel': 'NREL Plugin'
 }
 
 def rst_contents(module):
@@ -47,7 +49,7 @@ def summary():
 def generate():
     docs_dir = os.path.join(os.getcwd(), 'docs')
     build_dir = os.path.join(docs_dir, '_build')
-    spawner_docs_dir = os.path.join(docs_dir, 'spawner')
+    spawner_docs_dir = os.path.join(docs_dir, 'code_docs')
     if os.path.isdir(spawner_docs_dir):
         shutil.rmtree(spawner_docs_dir)
     os.mkdir(spawner_docs_dir)

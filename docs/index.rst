@@ -3,7 +3,7 @@
 Welcome to Spawn Wind's Documentation!
 ======================================
 
-.. mdinclude:: ../readme.md
+.. mdinclude:: ../README.md
 
 .. toctree::
     :name: spawner_doc
@@ -12,4 +12,4 @@ Welcome to Spawn Wind's Documentation!
 
     user_guide/getting_started
     user_guide/ini_guide
-    spawnwind/*
+    api/*

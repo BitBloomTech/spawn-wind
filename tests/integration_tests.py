@@ -15,6 +15,7 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 from os import path
+import pytest
 import luigi
 import numpy as np
 from spawn.generate_tasks import generate_tasks_from_spec
@@ -56,6 +57,7 @@ def test_can_create_runs_from_tree_spec(tmpdir, spawner, plugin_loader, example_
         seeds.append(t.metadata['turbulence_seed'])
     assert len(seeds) == len(set(seeds))  # testing uniqueness
 
+@pytest.mark.skipif('sys.platform != "win32"')
 def test_can_run_one_turbsim_and_fast_run(tmpdir, example_data_folder, spawner):
     spec = {
         "base_wind_input": path.join(example_data_folder, 'fast_input_files', 'TurbSim.inp'),

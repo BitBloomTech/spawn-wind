@@ -14,19 +14,19 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
+import pytest
 from os import path
 import tempfile
 from spawnwind.nrel import FastSimulationTask, WindGenerationTask
 
 
 def _check_run_fails(task, error_file):
-    try:
+    with pytest.raises(ChildProcessError):
         task.run()
-        assert False
-    except ChildProcessError:
-        assert path.isfile(error_file)
+    assert path.isfile(error_file)
 
 
+@pytest.mark.skipif('sys.platform != "win32"')
 def test_runs_fast_with_error():
     temp_dir = tempfile.TemporaryDirectory()
     input_file = path.join(temp_dir.name, 'fast.ipt')
@@ -36,6 +36,7 @@ def test_runs_fast_with_error():
     _check_run_fails(task, path.join(temp_dir.name, 'fast.err'))
 
 
+@pytest.mark.skipif('sys.platform != "win32"')
 def test_run_wind_generation_task_with_error():
     temp_dir = tempfile.TemporaryDirectory()
     input_file = path.join(temp_dir.name, 'turbsim.ipt')

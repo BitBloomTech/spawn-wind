@@ -57,7 +57,8 @@ def test_paths_are_absolute(examples_folder, cls, file, keys):
     _input = cls.from_file(path.join(examples_folder, file))
     for k in keys:
         f = _input[k]
-        assert path.isfile(f)
+        #sanitise windows paths
+        assert path.isfile(path.sep.join(f.split('\\')))
 
 
 @pytest.mark.parametrize('cls,file,key', [

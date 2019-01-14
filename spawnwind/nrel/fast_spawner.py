@@ -1,23 +1,22 @@
-# spawn
-# Copyright (C) 2018, Simmovation Ltd.
-# 
+# spawnwind
+# Copyright (C) 2018-2019, Simmovation Ltd.
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 """Implementation of :class:`AeroelasticSimulationSpawner` for FAST
 """
 import os
-from os import path
 import copy
 
 from spawn.util import quote
@@ -26,6 +25,7 @@ from ..spawners import AeroelasticSimulationSpawner
 from .simulation_input import AerodynInput
 from .tasks import FastSimulationTask
 
+#pylint: disable=too-many-public-methods
 class FastSimulationSpawner(AeroelasticSimulationSpawner):
     """Spawns FAST simulation tasks with wind generation dependency if necessary"""
 
@@ -50,45 +50,50 @@ class FastSimulationSpawner(AeroelasticSimulationSpawner):
         self._pitch_manoeuvre_rate = None
         self._yaw_manoeuvre_rate = None
 
-    def spawn(self, path_, metadata):
+    def spawn(self, path, metadata):
         """Spawn a simulation task
 
-        :param path_: The output path for the task
-        :type path_: str
+        :param path: The output path for the task
+        :type path: str
         :param metadata: Metadata to add to the task
         :type metadata: dict
 
         :returns: The simulation task
         :rtype: :class:`SimulationTask`
         """
-        if not path.isabs(path_):
+        if not os.path.isabs(path):
             raise ValueError('Must provide an absolute path')
-        if not path.isdir(path_):
-            os.makedirs(path_)
+        if not os.path.isdir(path):
+            os.makedirs(path)
         wind_tasks = self._spawn_preproc_tasks(metadata)
-        self._resolve_aerodyn_input(path_)
-        sim_input_file = path.join(path_, 'simulation.ipt')
+        self._resolve_aerodyn_input(path)
+        sim_input_file = os.path.join(path, 'simulation.ipt')
         self._input.to_file(sim_input_file)
-        sim_task = FastSimulationTask('run ' + path_, _input_file_path=sim_input_file, _dependencies=wind_tasks, _metadata=metadata)
+        sim_task = FastSimulationTask(
+            'run ' + path,
+            _input_file_path=sim_input_file,
+            _dependencies=wind_tasks,
+            _metadata=metadata
+        )
         return sim_task
 
     def _spawn_preproc_tasks(self, metadata):
         # Generate new wind file if needed
         if self._wind_is_explicit:
             return []
+
+        wind_hash = self._wind_spawner.input_hash()
+        if wind_hash in self._wind_task_cache:
+            wind_task = self._wind_task_cache[wind_hash]
         else:
-            wind_hash = self._wind_spawner.input_hash()
-            if wind_hash in self._wind_task_cache:
-                wind_task = self._wind_task_cache[wind_hash]
-            else:
-                outdir = path.join(self._prereq_outdir, wind_hash)
-                wind_task = self._wind_spawner.spawn(outdir, metadata)
-                self._wind_task_cache[wind_hash] = wind_task
-            self._aerodyn_input['WindFile'] = quote(wind_task.wind_file_path)
-            return [wind_task]
+            outdir = os.path.join(self._prereq_outdir, wind_hash)
+            wind_task = self._wind_spawner.spawn(outdir, metadata)
+            self._wind_task_cache[wind_hash] = wind_task
+        self._aerodyn_input['WindFile'] = quote(wind_task.wind_file_path)
+        return [wind_task]
 
     def _resolve_aerodyn_input(self, path_):
-        aerodyn_file_path = path.join(path_, 'aerodyn.ipt')
+        aerodyn_file_path = os.path.join(path_, 'aerodyn.ipt')
         self._aerodyn_input.to_file(aerodyn_file_path)
         self._input['ADFile'] = quote(aerodyn_file_path)
 
@@ -99,23 +104,28 @@ class FastSimulationSpawner(AeroelasticSimulationSpawner):
         :rtype: :class:`FastSimulationSpawner`
         """
         branched_spawner = copy.copy(self)
+        #pylint: disable=protected-access
         branched_spawner._input = copy.deepcopy(self._input)
         branched_spawner._wind_spawner = self._wind_spawner.branch()
         return branched_spawner
 
     # Simulation options
+    #pylint: disable=missing-docstring
     def get_output_start_time(self):
         return float(self._input['TStart'])
 
+    #pylint: disable=missing-docstring
     def set_output_start_time(self, time):
-        dt = time - self.get_output_start_time()
+        delta = time - self.get_output_start_time()
         self._input['TStart'] = time
-        self._input['TMax'] = float(self._input['TMax']) + dt  # Adjust max time so that simulation time is constant
+        self._input['TMax'] = float(self._input['TMax']) + delta  # Adjust max time so that simulation time is constant
         self._wind_spawner.duration = float(self._input['TMax'])
 
+    #pylint: disable=missing-docstring
     def get_simulation_time(self):
         return float(self._input['TMax']) - self.get_output_start_time()
 
+    #pylint: disable=missing-docstring
     def set_simulation_time(self, time):
         total_time = float(time) + self.get_output_start_time()
         self._input['TMax'] = float(time) + self.get_output_start_time()
@@ -123,35 +133,45 @@ class FastSimulationSpawner(AeroelasticSimulationSpawner):
         self._wind_spawner.duration = total_time
 
     # Initial Conditions
+    #pylint: disable=missing-docstring
     def get_initial_rotor_speed(self):
         return float(self._input['RotSpeed'])
 
+    #pylint: disable=missing-docstring
     def set_initial_rotor_speed(self, rotor_speed):
         self._input['RotSpeed'] = rotor_speed
 
+    #pylint: disable=missing-docstring
     def get_initial_azimuth(self):
         return float(self._input['Azimuth'])
 
+    #pylint: disable=missing-docstring
     def set_initial_azimuth(self, azimuth):
         self._input['Azimuth'] = azimuth
 
+    #pylint: disable=missing-docstring
     def get_initial_yaw(self):
         return float(self._input['NacYaw'])  # 'YawNeut' could be another possibility here
 
+    #pylint: disable=missing-docstring
     def set_initial_yaw(self, angle):
         self._input['NacYaw'] = angle
 
+    #pylint: disable=missing-docstring
     def get_initial_pitch(self):
         raise NotImplementedError()
 
+    #pylint: disable=missing-docstring
     def set_initial_pitch(self, angle):
         for i in range(self.number_of_blades):
             self.set_blade_initial_pitch(i+1, angle)
 
+    #pylint: disable=missing-docstring
     def get_blade_initial_pitch(self, index):
         bld = self._blade_string(index)
         return float(self._input['BlPitch' + bld])
 
+    #pylint: disable=missing-docstring
     def set_blade_initial_pitch(self, index, angle):
         bld = self._blade_string(index)
         self._input['BlPitch' + bld] = angle
@@ -160,9 +180,11 @@ class FastSimulationSpawner(AeroelasticSimulationSpawner):
             self._input['BlPitchF' + bld] = angle
 
     # Supervisory operation
+    #pylint: disable=missing-docstring
     def get_operation_mode(self):
         raise NotImplementedError('Incapable of determining operation mode')  # this is a tricky one!
 
+    #pylint: disable=missing-docstring
     def set_operation_mode(self, mode):
         if mode not in ['normal', 'idling', 'parked']:
             raise ValueError('mode \'' + mode + '\' unrecognised')
@@ -181,52 +203,64 @@ class FastSimulationSpawner(AeroelasticSimulationSpawner):
             self._fix_pitch()
 
         # rotor freedom
-        if mode == 'normal' or mode == 'idling':
+        if mode in ['normal', 'idling']:
             self._input['GenDOF'] = True
         else:
             self._input['GenDOF'] = False
-        if mode == 'idling' or mode == 'parked':
+        if mode in ['idling', 'parked']:
             self.initial_rotor_speed = 0.0
 
+    #pylint: disable=missing-docstring
     def get_pitch_manoeuvre_time(self):
         raise NotImplementedError('Incapable of determining pitch manoeuvre time for all blades at once')
 
+    #pylint: disable=missing-docstring
     def set_pitch_manoeuvre_time(self, time):
         for i in range(self.number_of_blades):
             self.set_blade_pitch_manoeuvre_time(i+1, time)
 
+    #pylint: disable=missing-docstring
     def get_blade_pitch_manoeuvre_time(self, index):
         return float(self._input['TPitManS' + self._blade_string(index)])
 
+    #pylint: disable=missing-docstring
     def set_blade_pitch_manoeuvre_time(self, index, time):
         self._input['TPitManS' + self._blade_string(index)] = time
         self._reconcile_pitch_manoeuvre(index)
 
+    #pylint: disable=missing-docstring
     def get_pitch_manoeuvre_rate(self):
         return self._pitch_manoeuvre_rate
 
+    #pylint: disable=missing-docstring
     def set_pitch_manoeuvre_rate(self, pitch_rate):
         self._pitch_manoeuvre_rate = float(pitch_rate)
         for i in range(self.number_of_blades):
             self._reconcile_pitch_manoeuvre(i+1)
 
+    #pylint: disable=missing-docstring
     def get_final_pitch(self):
         raise NotImplementedError('Incapable of determining final pitch angle for all blades at once')
 
+    #pylint: disable=missing-docstring
     def set_final_pitch(self, angle):
         for i in range(self.number_of_blades):
             self.set_blade_final_pitch(i+1, angle)
 
+    #pylint: disable=missing-docstring
     def get_blade_final_pitch(self, index):
         return float(self._input['BlPitchF' + self._blade_string(index)])
 
+    #pylint: disable=missing-docstring
     def set_blade_final_pitch(self, index, angle):
         self._input['BlPitchF' + self._blade_string(index)] = angle
         self._reconcile_pitch_manoeuvre(index)
 
+    #pylint: disable=missing-docstring
     def get_pitch_control_start_time(self):
         return float(self._input['TPCOn'])
 
+    #pylint: disable=missing-docstring
     def set_pitch_control_start_time(self, time):
         self._input['TPCOn'] = time
 
@@ -237,24 +271,30 @@ class FastSimulationSpawner(AeroelasticSimulationSpawner):
                 (float(self._input['BlPitchF' + bld]) - float(self._input['BlPitch' + bld]))\
                 / self._pitch_manoeuvre_rate
 
+    #pylint: disable=missing-docstring
     def get_yaw_manoeuvre_time(self):
         return float(self._input['TYawManS'])
 
+    #pylint: disable=missing-docstring
     def set_yaw_manoeuvre_time(self, time):
         self._input['TYawManS'] = time
         self._input['YCMode'] = 0
         self._reconcile_yaw_manoeuvre()
 
+    #pylint: disable=missing-docstring
     def get_yaw_manoeuvre_rate(self):
         return self._yaw_manoeuvre_rate
 
+    #pylint: disable=missing-docstring
     def set_yaw_manoeuvre_rate(self, rate):
         self._yaw_manoeuvre_rate = float(rate)
         self._reconcile_yaw_manoeuvre()
 
+    #pylint: disable=missing-docstring
     def get_final_yaw(self):
         return float(self._input['NacYawF'])
 
+    #pylint: disable=missing-docstring
     def set_final_yaw(self, angle):
         self._input['NacYawF'] = angle
         self._reconcile_yaw_manoeuvre()
@@ -265,49 +305,63 @@ class FastSimulationSpawner(AeroelasticSimulationSpawner):
                 (self.get_final_yaw() - self.get_initial_yaw()) / self._yaw_manoeuvre_rate
 
     # Turbine faults
+    #pylint: disable=missing-docstring
     def get_grid_loss_time(self):
         return float(self._input['TimGenOf'])
 
+    #pylint: disable=missing-docstring
     def set_grid_loss_time(self, time):
         self._input['GenTiStp'] = True
         self._input['TimGenOf'] = time
 
     # Properties deferred to wind generation spawner:
+    #pylint: disable=missing-docstring
     def get_wind_speed(self):
         return self._wind_spawner.wind_speed
 
+    #pylint: disable=missing-docstring
     def set_wind_speed(self, speed):
         self._wind_spawner.wind_speed = speed
 
+    #pylint: disable=missing-docstring
     def get_turbulence_intensity(self):
         return self._wind_spawner.turbulence_intensity
 
+    #pylint: disable=missing-docstring
     def set_turbulence_intensity(self, turbulence_intensity):
         self._wind_spawner.turbulence_intensity = turbulence_intensity
 
+    #pylint: disable=missing-docstring
     def get_turbulence_seed(self):
         return self._wind_spawner.turbulence_seed
 
+    #pylint: disable=missing-docstring
     def set_turbulence_seed(self, seed):
         self._wind_spawner.turbulence_seed = seed
 
+    #pylint: disable=missing-docstring
     def get_wind_shear(self):
         return self._wind_spawner.wind_shear
 
+    #pylint: disable=missing-docstring
     def set_wind_shear(self, exponent):
         self._wind_spawner.wind_shear = exponent
 
+    #pylint: disable=missing-docstring
     def get_upflow(self):
         return self._wind_spawner.upflow
 
+    #pylint: disable=missing-docstring
     def set_upflow(self, angle):
         self._wind_spawner.upflow = angle
 
+    #pylint: disable=missing-docstring
     def get_wind_file(self):
         return self._aerodyn_input['WindFile']
 
+    #pylint: disable=missing-docstring
     def set_wind_file(self, file):
-        self._aerodyn_input['WindFile'] = quote(path.abspath(file))
+        self._aerodyn_input['WindFile'] = quote(os.path.abspath(file))
         self._wind_is_explicit = True  # Don't generate wind task dependency
 
     # Properties of turbine, for which setting is not supported
@@ -342,4 +396,3 @@ class FastSimulationSpawner(AeroelasticSimulationSpawner):
 
     def _make_large_time(self):
         return max(9999.9, float(self._input['TMax']) + 1.0)
-

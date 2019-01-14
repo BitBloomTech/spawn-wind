@@ -15,9 +15,19 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 from setuptools import setup, find_packages
+from os import path
+
+import versioneer
+
+PACKAGE = 'spawn-wind'
+
+_here = path.abspath(path.dirname(__file__))
+
+with open(path.join(_here, 'README.md')) as fp:
+    README_CONTENTS = fp.read()
 
 install_requires = [
-    'spawn-core',
+    'spawn>=0.1',
     'wetb==0.0.9',
     'setuptools>=38.3'
 ]
@@ -25,11 +35,13 @@ install_requires = [
 tests_require = [
     'pytest',
     'pytest-mock',
+    'pytest-cov',
     'pylint',
     'numpy',
     'pandas',
     'tox',
-    'luigi'
+    'luigi==2.8.2',
+    'licensify'
 ]
 
 extras_require = {
@@ -38,13 +50,23 @@ extras_require = {
 }
 
 setup(
-    name='spawn-wind',
-    version='0.1',
-    packages=find_packages(),
+    name=PACKAGE,
     install_requires=install_requires,
     tests_require=tests_require,
     extras_require=extras_require,
-    dependency_links=[
-        'git+ssh://git@github.com/Simmovation/spawn.git#egg=spawn-core-0.1'
-    ]
+    packages=find_packages(exclude=('tests*',)),
+    cmdclass=versioneer.get_cmdclass(),
+    license='GPLv3',
+    version=versioneer.get_version(),
+    author='Simmovation Ltd',
+    author_email='info@simmovation.tech',
+    url='https://github.com/Simmovation/spawn-wind',
+    platforms='any',
+    description='Spawn Wind is a stand-alone extension to Simmovation\'s Spawn package designed for the specification and execution of large simulations sets of aeroelastic calculations for wind turbines',
+    long_description=README_CONTENTS,
+    long_description_content_type='text/markdown',
+    python_requires='==3.6.*,<4',
+    entry_points={
+        'console_scripts': ['spawnwind=spawnwind.__main__:cli'],
+    }
 )

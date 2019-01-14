@@ -1,6 +1,6 @@
 # Getting Started
 
-This page describes the main steps needed in order to run your first set of aeroelastic simulations using spawn-wind
+This page describes the main steps needed in order to run your first set of aeroelastic simulations using Spawn Wind
 
 1. Edit the `spawn.ini` file to refer to the desired FAST base input files and working directory. A description of configuration options is [here](ini_guide.md). They are currently set up to use the NREL 5MW input files located in the `example_data/fast_input_files` directory.
 2. Write a Spawn input specification in JSON ([file format definition here](https://github.com/Simmovation/spawn/blob/master/docs/user_guide/input-file-definition.md)). The parameters should correspond to properties of the spawner ([documented here](../spawnwind/spawnwind.spawners.rst)), e.g. `wind_speed`, `simulation_time`.

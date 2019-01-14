@@ -64,6 +64,7 @@ def create_spawner(turbsim_exe, fast_exe, turbsim_base_file, fast_base_file, run
 def NTM(Iref, wind_speed):
     """
     Additional evaluator - evaluates turbulence intensity according to IEC edition 3 normal turbulence model
+
     :param Iref: Reference turbulence intensity in percent according to turbine class
     :param wind_speed: 10-minute mean wind speed in m/s
     :returns: Turbulence intensity in percent
@@ -74,6 +75,7 @@ def NTM(Iref, wind_speed):
 def ETM(Iref, Vmean, wind_speed):
     """
     Additional evaluator - evaluates turbulence intensity according to IEC edition 3 extreme turbulence model
+
     :param Iref: Reference turbulence intensity in percent according to turbine class
     :param Vmean: Annual mean wind speed according to turbine class
     :param wind_speed: 10-minute mean wind speed in m/s

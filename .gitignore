@@ -10,7 +10,5 @@ multiwindcalc/temp/
 docs/_build
 docs/api
 !.gitignore
-
 docs/spawner/
-
-docs/code_docs/
+docs/spawnwind/

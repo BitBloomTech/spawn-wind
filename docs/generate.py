@@ -49,7 +49,7 @@ def summary():
 def generate():
     docs_dir = os.path.join(os.getcwd(), 'docs')
     build_dir = os.path.join(docs_dir, '_build')
-    spawner_docs_dir = os.path.join(docs_dir, 'code_docs')
+    spawner_docs_dir = os.path.join(docs_dir, 'spawnwind')
     if os.path.isdir(spawner_docs_dir):
         shutil.rmtree(spawner_docs_dir)
     os.mkdir(spawner_docs_dir)

@@ -14,6 +14,6 @@ Spawn wind is set up to use NREL's FAST v7.0.2 but can be adapted to other versi
 
     user_guide/getting_started
     user_guide/ini_guide
-    code_docs/*
+    spawnwind/*
 
 Browse through the navigation bar to learn how to use Spawn wind.

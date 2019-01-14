@@ -12,3 +12,4 @@ docs/api
 !.gitignore
 docs/spawner/
 docs/spawnwind/
+!.circleci

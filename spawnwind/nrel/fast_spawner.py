@@ -22,7 +22,7 @@ import copy
 
 from spawn.util import quote
 
-from spawnwind import AeroelasticSimulationSpawner
+from ..spawners import AeroelasticSimulationSpawner
 from .simulation_input import AerodynInput
 from .tasks import FastSimulationTask
 

@@ -28,7 +28,18 @@ from .fast_spawner import FastSimulationSpawner
 from .tasks import WindGenerationTask, FastSimulationTask
 
 def create_spawner(turbsim_exe, fast_exe, turbsim_base_file, fast_base_file, runner_type, turbsim_working_dir, fast_working_dir, outdir, prereq_outdir):
-    """Creates an nrel spawner
+    """
+
+    :param turbsim_exe: Location of TurbSim executable
+    :param fast_exe: Location of FAST executable
+    :param turbsim_base_file: Baseline TurbSim input file (typically `TurbSim.inp`) from which wind file generation tasks are spawned
+    :param fast_base_file: FAST input file (typically `.fst`) to which all parameter editions are made and from which simulations are spawned
+    :param runner_type: default is `process`
+    :param turbsim_working_dir: Directory in which TurbSim wind generation tasks are executed
+    :param fast_working_dir: Directory in which FAST simulations are executed. Note that the discon.dll must be in this directory
+    :param outdir: Root output directory for spawning and thus where simulation outputs are located
+    :param prereq_outdir: Root output directory for prerequisite tasks (i.e. wind file generation)
+    :returns: `FastSimulationSpawner` object
     """
     validate_file(turbsim_exe, 'turbsim_exe')
     validate_file(fast_exe, 'fast_exe')
@@ -51,12 +62,25 @@ def create_spawner(turbsim_exe, fast_exe, turbsim_base_file, fast_base_file, run
 
 
 def NTM(Iref, wind_speed):
-    """Evaluates turbulence intensity according to normal turbulence model"""
+    """
+    Additional evaluator - evaluates turbulence intensity according to IEC edition 3 normal turbulence model
+
+    :param Iref: Reference turbulence intensity in percent according to turbine class
+    :param wind_speed: 10-minute mean wind speed in m/s
+    :returns: Turbulence intensity in percent
+    """
     return Iref * (0.75 * wind_speed + 5.6) / wind_speed
 
 
 def ETM(Iref, Vmean, wind_speed):
-    """Evaluates turbulence intensity according to extreme turbulence model"""
+    """
+    Additional evaluator - evaluates turbulence intensity according to IEC edition 3 extreme turbulence model
+
+    :param Iref: Reference turbulence intensity in percent according to turbine class
+    :param Vmean: Annual mean wind speed according to turbine class
+    :param wind_speed: 10-minute mean wind speed in m/s
+    :returns: Turbulence intensity in percent
+    """
     c = 2.0
     return c * Iref * (0.072 * (Vmean / c + 3.0) * (wind_speed / c - 4) + 10.0) / wind_speed
 

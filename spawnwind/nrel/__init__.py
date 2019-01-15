@@ -20,3 +20,4 @@ from .fast_spawner import FastSimulationSpawner
 from .turbsim_spawner import TurbsimSpawner
 from .tasks import WindGenerationTask, FastSimulationTask
 from .simulation_input import NRELSimulationInput, AerodynInput, FastInput, TurbsimInput
+from .plugin import create_spawner, NTM, ETM

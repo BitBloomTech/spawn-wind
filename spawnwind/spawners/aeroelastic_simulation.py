@@ -20,7 +20,7 @@ from spawn.util import StringProperty, IntProperty, FloatProperty, ArrayProperty
 from spawn.spawners import TaskSpawner
 
 class AeroelasticSimulationSpawner(TaskSpawner):
-    """Spawner of aeroelastic simulations of wind turbines including pre-processing dependencies"""
+    """Spawner of aeroelastic simulations of wind turbines including dependent turbulent wind file creation when necessary"""
 
     # Simulation options
     output_start_time = FloatProperty(doc='Simulation time that elapses before the simulator starts logging results', abstract=True)

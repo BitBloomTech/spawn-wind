@@ -73,6 +73,7 @@ def test_property_type(spawner, property, type):
     assert isinstance(getattr(spawner, property), type)
 
 
+@pytest.mark.skipif('sys.platform != "win32"')
 def test_output_start_time(baseline, spawner, tmpdir):
     spawner.output_start_time = 0.5
     res = run_and_get_results(spawner, tmpdir)
@@ -80,6 +81,7 @@ def test_output_start_time(baseline, spawner, tmpdir):
     assert res['Time'].iloc[-1] - res['Time'][0] == pytest.approx(spawner.simulation_time)
 
 
+@pytest.mark.skipif('sys.platform != "win32"')
 def test_simulation_time(spawner, tmpdir):
     spawner.output_start_time = 1.0
     spawner.simulation_time = 2.0
@@ -87,6 +89,7 @@ def test_simulation_time(spawner, tmpdir):
     assert res['Time'].iloc[-1] - res['Time'][0] == pytest.approx(spawner.simulation_time)
 
 
+@pytest.mark.skipif('sys.platform != "win32"')
 @pytest.mark.parametrize('key,value,output_name', [
     ('initial_rotor_speed', 7.0, 'RotSpeed'),
     ('initial_azimuth', 180.0, 'Azimuth'),
@@ -111,6 +114,7 @@ def test_set_and_then_get_indexed_parameters(spawner, key, index, value):
     assert retval == value
 
 
+@pytest.mark.skipif('sys.platform != "win32"')
 def test_operating_mode(spawner, tmpdir):
     spawner.operation_mode = 'idling'
     spawner.initial_pitch = 30.0
@@ -133,6 +137,7 @@ def test_operating_mode(spawner, tmpdir):
     assert np.all(res3['RotSpeed'] > 0.0)
 
 
+@pytest.mark.skipif('sys.platform != "win32"')
 def test_pitch_manoeuvre_all_blades(spawner, tmpdir):
     spawner.simulation_time = 4.0
     spawner.initial_pitch = 10.0
@@ -143,6 +148,7 @@ def test_pitch_manoeuvre_all_blades(spawner, tmpdir):
     assert res['BldPitch1'].iloc[-1] == pytest.approx(12.0)
 
 
+@pytest.mark.skipif('sys.platform != "win32"')
 def test_pitch_manoeuvre_one_blade(spawner, tmpdir):
     spawner.simulation_time = 4.0
     spawner.initial_pitch = 10.0
@@ -155,6 +161,7 @@ def test_pitch_manoeuvre_one_blade(spawner, tmpdir):
     assert res['BldPitch1'].iloc[-1] == pytest.approx(12.0)
 
 
+@pytest.mark.skipif('sys.platform != "win32"')
 def test_pitch_control_start_time(spawner, tmpdir):
     spawner.simulation_time = 2.0
     spawner.wind_speed = 16.0
@@ -165,6 +172,7 @@ def test_pitch_control_start_time(spawner, tmpdir):
     assert np.std(pitch[10:]) > 0.0
 
 
+@pytest.mark.skipif('sys.platform != "win32"')
 def test_yaw_manoeuvre(spawner, tmpdir):
     spawner.simulation_time = 4.0
     spawner.initial_yaw = 5.0
@@ -176,6 +184,7 @@ def test_yaw_manoeuvre(spawner, tmpdir):
     assert res['YawPzn'].iloc[-1] == pytest.approx(6.5)
 
 
+@pytest.mark.skipif('sys.platform != "win32"')
 def test_grid_loss(spawner, tmpdir):
     spawner.simulation_time = 2.0
     spawner.grid_loss_time = 1.0
@@ -184,18 +193,21 @@ def test_grid_loss(spawner, tmpdir):
     assert res['GenTq'].iloc[-1] == 0.0
 
 
+@pytest.mark.skipif('sys.platform != "win32"')
 def test_turbulence_seed(baseline, spawner, tmpdir):
     spawner.turbulence_seed += 1
     res = run_and_get_results(spawner, tmpdir)
     assert np.all(baseline['WindVxi'] != res['WindVxi'])
 
 
+@pytest.mark.skipif('sys.platform != "win32"')
 def test_wind_speed(baseline, spawner, tmpdir):
     spawner.wind_speed = 2 * spawner.wind_speed
     res = run_and_get_results(spawner, tmpdir)
     assert np.mean(res['WindVxi']) == pytest.approx(2*np.mean(baseline['WindVxi']), rel=0.1)
 
 
+@pytest.mark.skipif('sys.platform != "win32"')
 def test_turbulence_intensity(baseline, spawner, tmpdir):
     assert 1.0 < spawner.turbulence_intensity < 100.0
     spawner.turbulence_intensity = 2 * spawner.turbulence_intensity
@@ -203,18 +215,21 @@ def test_turbulence_intensity(baseline, spawner, tmpdir):
     assert np.std(res['WindVxi']) == pytest.approx(2*np.std(baseline['WindVxi']), rel=1e-3)
 
 
+@pytest.mark.skipif('sys.platform != "win32"')
 def test_turbulence_seed(baseline, spawner, tmpdir):
     spawner.turbulence_seed += 1
     res = run_and_get_results(spawner, tmpdir)
     assert np.all(baseline['WindVxi'] != res['WindVxi'])
 
 
+@pytest.mark.skipif('sys.platform != "win32"')
 def test_wind_shear(baseline, spawner, tmpdir):
     spawner.wind_shear = 0.3
     res = run_and_get_results(spawner, tmpdir)
     assert np.all(res['YawBrMyp'] > baseline['YawBrMyp'])  # increase in shear gives predominantly 0P increase in tower-top overturning moment
 
 
+@pytest.mark.skipif('sys.platform != "win32"')
 def test_upflow(baseline, spawner, tmpdir):
     spawner.upflow = 10.0
     res = run_and_get_results(spawner, tmpdir)
@@ -224,6 +239,7 @@ def test_upflow(baseline, spawner, tmpdir):
     assert math.degrees(upflow_new - upflow_baseline) == pytest.approx(spawner.upflow, abs=0.1)
 
 
+@pytest.mark.skipif('sys.platform != "win32"')
 def test_fails_with_invalid_wind_file(spawner, tmpdir):
     spawner.wind_file = 'C:/this/is/a/bad/path.wnd'
     task = spawner.spawn(str(tmpdir), {})
@@ -231,6 +247,7 @@ def test_fails_with_invalid_wind_file(spawner, tmpdir):
         task.run()
 
 
+@pytest.mark.skipif('sys.platform != "win32"')
 def test_completes_with_relative_wind_file(spawner, tmpdir):
     # This test must be run with root as working directory
     spawner.wind_file = 'example_data/fast_input_files/wind_files/NWP4.0.wnd'
@@ -239,6 +256,7 @@ def test_completes_with_relative_wind_file(spawner, tmpdir):
     assert task.complete()
 
 
+@pytest.mark.skipif('sys.platform != "win32"')
 def test_runaway_at_high_wind_speed(spawner, tmpdir):
     spawner.wind_speed = 24.0
     spawner.simulation_time = 20.0

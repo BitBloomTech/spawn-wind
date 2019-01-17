@@ -1,13 +1,25 @@
-# Python CircleCI 2.0 configuration file
-#
-# Check https://circleci.com/docs/2.0/language-python/ for more details
-#
-version: 2
+version: 2.1
+workflows:
+  build_and_deploy:
+    jobs:
+      - build:
+          filters:
+            tags:
+              only: /.*/
+      - deploy:
+          requires:
+            - build
+          filters:
+            tags:
+              only: /[0-9]+(\.(?:dev)?[0-9]+)*/
+            branches:
+              ignore: /.*/
+
 jobs:
   build:
     docker:
       # specify the version you desire here
-      - image: circleci/python:3.6.1
+      - image: circleci/python:3.6
 
     working_directory: ~/repo
 
@@ -27,18 +39,19 @@ jobs:
           command: |
             python3 -m venv .venv
             . .venv/bin/activate
-            pip install .[test]
+            pip install .[test,publish]
 
       # run tests!
       - run:
           name: run tests
           command: |
             . .venv/bin/activate
-            pytest tests --cov spawnwind
+            tox -e py36,docs
 
       - save_cache:
           paths:
             - ./.venv
+            - ./.tox
             - .coverage
           key: v1-dependencies-{{ checksum "setup.py" }}
 
@@ -47,9 +60,50 @@ jobs:
           command: |
             . .venv/bin/activate
             coverage report
-            coverage xml -o test-reports/coverage.xml
+            mkdir test-reports
+            mkdir test-reports/coverage
+            coverage html -d test-reports/coverage
 
       - store_artifacts:
           path: test-reports
           destination: test-reports
-          
+
+  deploy:
+    docker:
+      - image: circleci/python:3.7
+    steps:
+      - checkout
+      # Download and cache dependencies
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "setup.py" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-dependencies-
+
+      # install dependencies
+      - run:
+          name: install dependencies
+          command: |
+            python3 -m venv .venv
+            . .venv/bin/activate
+            pip install .[test,publish]
+
+      - run:
+          name: Build packages
+          command: |
+            . .venv/bin/activate
+            python setup.py sdist
+      
+      - run:
+          name: Initialise .pypirc
+          command: |
+            echo -e "[pypi]" >> ~/.pypirc
+            echo -e "repository = $PYPI_REPOSITORY" >> ~/.pypirc
+            echo -e "username = $PYPI_USERNAME" >> ~/.pypirc
+            echo -e "password = $PYPI_PASSWORD" >> ~/.pypirc
+      
+      - run:
+          name: Upload package
+          command: |
+            . .venv/bin/activate
+            twine upload dist/*

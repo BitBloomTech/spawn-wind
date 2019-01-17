@@ -70,7 +70,7 @@ jobs:
 
   deploy:
     docker:
-      - image: circleci/python:3.7
+      - image: circleci/python:3.6
     steps:
       - checkout
       # Download and cache dependencies

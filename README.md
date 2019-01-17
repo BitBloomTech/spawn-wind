@@ -1,6 +1,6 @@
 # Spawn Wind
 
-[![CircleCI](https://circleci.com/gh/Simmovation/spawn-wind.svg?style=svg)](https://circleci.com/gh/Simmovation/spawn-wind)
+[![CircleCI](https://circleci.com/gh/Simmovation/spawn-wind.svg?style=svg&circle-token=09e82a0ce9e9e4dccd9dbeb181fd567907a15f2a)](https://circleci.com/gh/Simmovation/spawn-wind)
 
 Spawn Wind is a stand-alone extension to Simmovation's [Spawn package](https://github.com/Simmovation/spawn) designed for the specification and execution of large simulations sets of aeroelastic calculations for wind turbines. It is particularly useful for executing IEC load calculations but can also be used for the generation of any set of simulations.
 

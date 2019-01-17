@@ -33,6 +33,7 @@ def fast_input(examples_folder):
     return FastInput.from_file(path.join(examples_folder, 'NRELOffshrBsline5MW_Onshore.fst'))
 
 
+@pytest.mark.skipif('sys.platform != "win32"')
 def test_can_spawn_turbsim_task(turbsim_input):
     temp_dir = tempfile.TemporaryDirectory()
     spawner = TurbsimSpawner(turbsim_input)
@@ -42,6 +43,7 @@ def test_can_spawn_turbsim_task(turbsim_input):
     assert not task.complete()
 
 
+@pytest.mark.skipif('sys.platform != "win32"')
 def test_spawns_tests_requiring_wind_generation_when_wind_changed(turbsim_input, fast_input):
     temp_dir = tempfile.TemporaryDirectory()
     spawner = FastSimulationSpawner(fast_input, TurbsimSpawner(turbsim_input), temp_dir.name)
@@ -68,6 +70,7 @@ def test_spawn_with_additional_directory_puts_tasks_in_new_folders(turbsim_input
     assert task1.requires()[0].output().path != task2.requires()[0].output().path
 
 
+@pytest.mark.skipif('sys.platform != "win32"')
 def test_runs_two_tasks_successfully_that_use_same_prerequisite(turbsim_input, fast_input, tmpdir, plugin_loader):
     spawner = FastSimulationSpawner(fast_input, TurbsimSpawner(turbsim_input), tmpdir)
     spec_dict = {
@@ -82,7 +85,7 @@ def test_runs_two_tasks_successfully_that_use_same_prerequisite(turbsim_input, f
     scheduler = LuigiScheduler(config)
     scheduler.run(spawner, spec)
 
-
+@pytest.mark.skipif('sys.platform != "win32"')
 def test_does_not_create_wind_task_when_wind_file_is_set(turbsim_input, fast_input, example_data_folder, tmpdir):
     spawner = FastSimulationSpawner(fast_input, TurbsimSpawner(turbsim_input), tmpdir)
     spawner.wind_file = path.join(example_data_folder, 'fast_input_files', 'wind_files', 'EDC+R+2.0.wnd')

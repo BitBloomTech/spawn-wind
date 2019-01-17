@@ -1,16 +1,16 @@
 # spawn
 # Copyright (C) 2018, Simmovation Ltd.
-# 
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
@@ -29,15 +29,26 @@
 
 
 # -- Project information -----------------------------------------------------
+import os
+import shutil
+import sys
+
+_here = os.path.abspath(os.path.dirname(__file__))
+
+sys.path.insert(0, os.path.abspath(os.path.join(_here, '..')))
+
+import spawnwind
+
+import spawnwind.spawners
 
 project = 'spawn-wind'
-copyright = '2018, Philip Bradstock, Michael Tinning'
-author = 'Philip Bradstock, Michael Tinning'
+copyright = '2018, Michael Tinning, Philip Bradstock'
+author = 'Michael Tinning, Philip Bradstock'
 
 # The short X.Y version
-version = ''
+version = spawnwind.__version__
 # The full version, including alpha/beta/rc tags
-release = ''
+release = spawnwind.__version__
 
 
 # -- General configuration ---------------------------------------------------
@@ -113,7 +124,7 @@ html_theme = 'alabaster'
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = []
 
 # Custom sidebar templates, must be a dictionary that maps document names
 # to template names.
@@ -129,7 +140,7 @@ html_static_path = ['_static']
 # -- Options for HTMLHelp output ---------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'spawndoc'
+htmlhelp_basename = 'spawnwinddoc'
 
 
 # -- Options for LaTeX output ------------------------------------------------
@@ -156,8 +167,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'spawn-wind.tex', 'spawn-wind Documentation',
-     'Philip Bradstock, Michael Tinning', 'manual'),
+    (master_doc, 'spawn-wind.tex', 'Spawn Wind Documentation',
+     'Michael Tinning, Philip Bradstock', 'manual'),
 ]
 
 
@@ -166,7 +177,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'spawn-wind', 'spawn-wind Documentation',
+    (master_doc, 'spawn-wind', 'Spawn Wind Documentation',
      [author], 1)
 ]
 
@@ -177,7 +188,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'spawn-wind', 'spawn-wind Documentation',
+    (master_doc, 'spawn-wind', 'Spawn Wind Documentation',
      author, 'spawn-wind', 'One line description of project.',
      'Miscellaneous'),
 ]
@@ -212,3 +223,42 @@ intersphinx_mapping = {'https://docs.python.org/': None}
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
+
+GENERATED_RSTS = [
+    'spawnwind.spawners',
+    'spawnwind.nrel'
+]
+
+TITLES = {
+    'spawnwind.spawners': 'Spawners',
+    'spawnwind.nrel': 'NREL Plugin'
+}
+
+def rst_contents(module):
+    title = TITLES.get(module, module)
+    underline = '='*len(title)
+    return f'{title}\n{underline}\n\n.. automodule:: {module}\n\t:members:\n\t:imported-members:\n'
+
+SUMMARY = """API Reference
+=============
+
+.. autosummary::
+
+    {}
+"""
+
+def summary():
+    return SUMMARY.format('\n    '.join(GENERATED_RSTS))
+
+def generate(docs_dir):
+    api_docs_dir = os.path.join(docs_dir, 'api')
+    if os.path.isdir(api_docs_dir):
+        shutil.rmtree(api_docs_dir)
+    os.mkdir(api_docs_dir)
+    for file in GENERATED_RSTS:
+        with open(os.path.join(api_docs_dir, file + '.rst'), 'w+') as fp:
+            fp.write(rst_contents(file))
+    with open(os.path.join(api_docs_dir, 'api_reference.rst'), 'w+') as fp:
+        fp.write(summary())
+
+generate(_here)

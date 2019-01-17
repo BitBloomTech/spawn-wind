@@ -9,6 +9,8 @@ multiwindcalc/temp/
 **/temp/*
 docs/_build
 docs/api
-!.gitignore
 docs/spawner/
 docs/spawnwind/
+!.circleci
+!.gitignore
+!.gitattributes

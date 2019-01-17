@@ -1,0 +1,2 @@
+include versioneer.py
+include spawnwind/_version.py

@@ -1,16 +1,16 @@
-# spawn
-# Copyright (C) 2018, Simmovation Ltd.
-# 
+# spawnwind
+# Copyright (C) 2018-2019, Simmovation Ltd.
+#
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation; either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
@@ -63,10 +63,10 @@ class NRELSimulationInput(SimulationInput):
         :param file_path: The path of the file to write
         :type file_path: path-like
         """
-        with open(file_path, 'w') as fw:
+        with open(file_path, 'w') as fp:
             for line in self._input_lines:
-                fw.write(line)
-    
+                fp.write(line)
+
     def hash(self):
         """Returns a hash of the contents of the file
 
@@ -102,13 +102,13 @@ class NRELSimulationInput(SimulationInput):
             self._input_lines[i] = self._input_lines[i].replace(rel_path,
                                                                 path.abspath(path.join(root_folder, rel_path)))
 
-    def _lines_with_paths(self):
+    @staticmethod
+    def _lines_with_paths():
         return []
 
 
 class TurbsimInput(NRELSimulationInput):
     """Handles contents of TurbSim (FAST wind generation) input file"""
-    pass
 
 
 class AerodynInput(NRELSimulationInput):

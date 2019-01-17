@@ -47,6 +47,7 @@ tests_require = [
 extras_require = {
     'test': tests_require,
     'docs': ['sphinx', 'm2r'],
+    'publish': ['twine']
 }
 
 setup(

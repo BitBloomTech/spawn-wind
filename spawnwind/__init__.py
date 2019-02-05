@@ -16,7 +16,14 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 """Wind plugin for :mod:`spawn`
 """
+from spawn.plugins import PluginLoader
+from spawn.config import DefaultConfiguration
+
+import spawnwind.nrel.plugin as nrel_plugin
 
 from ._version import get_versions
 __version__ = get_versions()['version']
 del get_versions
+
+PluginLoader.pre_load_plugin('nrel', nrel_plugin)
+DefaultConfiguration.set_default('type', 'nrel')

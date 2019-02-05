@@ -21,7 +21,7 @@ import pytest
 import luigi.configuration
 
 from spawn.plugins import PluginLoader
-from spawn.config import DefaultConfiguration
+from spawn.config import DefaultConfiguration, CompositeConfiguration, CommandLineConfiguration
 
 from spawnwind.nrel import TurbsimInput, FastInput, TurbsimSpawner, FastSimulationSpawner
 
@@ -81,5 +81,14 @@ def spawner(example_data_folder, tmpdir):
                                  wind_spawner, tmpdir)
 
 @pytest.fixture
-def plugin_loader():
-    return PluginLoader(DefaultConfiguration())
+def plugin_loader(tmpdir):
+    default_config = DefaultConfiguration()
+    command_line_configuration = CommandLineConfiguration(
+        turbsim_exe=EXE_PATHS['turbsim'], fast_exe=EXE_PATHS['fast'],
+        turbsim_base_file=path.join(_example_data_folder, 'fast_input_files', 'TurbSim.inp'),
+        fast_base_file=path.join(_example_data_folder, 'fast_input_files', 'NRELOffshrBsline5MW_Onshore.fst'),
+        turbsim_working_dir=_example_data_folder,
+        fast_working_dir=_example_data_folder,
+        outdir=str(tmpdir)
+    )
+    return PluginLoader(CompositeConfiguration(command_line_configuration, default_config))

@@ -22,6 +22,7 @@ from spawn.generate_tasks import generate_tasks_from_spec
 from spawn.tasks.simulation import SimulationTask
 from spawn.parsers import *
 from spawn.parsers.value_proxy import ValueProxyParser
+from spawn.config import DefaultConfiguration
 
 from spawnwind.nrel import WindGenerationTask, FastSimulationSpawner
 
@@ -74,3 +75,9 @@ def test_can_run_one_turbsim_and_fast_run(tmpdir, example_data_folder, spawner):
     tasks = generate_tasks_from_spec(spawner, root_node, tmpdir.strpath)
     luigi.build(tasks, local_scheduler=True, log_level='WARNING')
     assert tasks[0].output().exists()
+
+def test_plugin_loader_has_nrel_plugin_loaded(plugin_loader):
+    assert plugin_loader.create_spawner('nrel')
+
+def test_default_type_is_nrel():
+    assert DefaultConfiguration().get('spawn', 'type') == 'nrel'

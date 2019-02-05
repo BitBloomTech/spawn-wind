@@ -16,14 +16,7 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 """CLI entry point for `spawnwind`
 """
-from spawn.plugins import PluginLoader
-from spawn.config import DefaultConfiguration
 from spawn.cli.functions import cli
-
-import spawnwind.nrel.plugin as nrel_plugin
-
-PluginLoader.pre_load_plugin('nrel', nrel_plugin)
-DefaultConfiguration.set_default('type', 'nrel')
 
 if __name__ == '__main__':
     #pylint: disable=no-value-for-parameter

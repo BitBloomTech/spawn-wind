@@ -80,7 +80,7 @@ def test_runs_two_tasks_successfully_that_use_same_prerequisite(turbsim_input, f
             "initial_yaw": [-10.0, 10.0]
         }
     }
-    spec = SpecificationParser(DictSpecificationProvider(spec_dict), plugin_loader).parse()
+    spec = SpecificationParser(plugin_loader).parse(spec_dict)
     config = CommandLineConfiguration(workers=2, runner_type='process', prereq_outdir='prerequisites', outdir=tmpdir, local=True)
     scheduler = LuigiScheduler(config)
     scheduler.run(spawner, spec)

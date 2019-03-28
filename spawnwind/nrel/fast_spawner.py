@@ -22,7 +22,7 @@ import copy
 from spawn.util import quote
 
 from ..spawners import AeroelasticSimulationSpawner
-from .simulation_input import AerodynInput
+from .wind_input import AerodynInput
 from .tasks import FastSimulationTask
 
 #pylint: disable=too-many-public-methods
@@ -43,7 +43,7 @@ class FastSimulationSpawner(AeroelasticSimulationSpawner):
         self._wind_spawner = wind_spawner
         self._prereq_outdir = prereq_outdir
         # non-arguments:
-        self._aerodyn_input = AerodynInput.from_file(self._input['ADFile'])
+        self._wind_input = AerodynInput.from_file(self._input['ADFile'])
         self._wind_task_cache = {}
         self._wind_is_explicit = False
         # intermediate parameters
@@ -66,7 +66,7 @@ class FastSimulationSpawner(AeroelasticSimulationSpawner):
         if not os.path.isdir(path):
             os.makedirs(path)
         wind_tasks = self._spawn_preproc_tasks(metadata)
-        self._resolve_aerodyn_input(path)
+        self._input[self._wind_input.key] = self._wind_input.write(path)
         sim_input_file = os.path.join(path, 'simulation.ipt')
         self._input.to_file(sim_input_file)
         sim_task = FastSimulationTask(
@@ -89,13 +89,8 @@ class FastSimulationSpawner(AeroelasticSimulationSpawner):
             outdir = os.path.join(self._prereq_outdir, wind_hash)
             wind_task = self._wind_spawner.spawn(outdir, metadata)
             self._wind_task_cache[wind_hash] = wind_task
-        self._aerodyn_input['WindFile'] = quote(wind_task.wind_file_path)
+        self._wind_input.set_wind_file(quote(wind_task.wind_file_path))
         return [wind_task]
-
-    def _resolve_aerodyn_input(self, path_):
-        aerodyn_file_path = os.path.join(path_, 'aerodyn.ipt')
-        self._aerodyn_input.to_file(aerodyn_file_path)
-        self._input['ADFile'] = quote(aerodyn_file_path)
 
     def branch(self):
         """Create a copy of this spawner
@@ -357,11 +352,11 @@ class FastSimulationSpawner(AeroelasticSimulationSpawner):
 
     #pylint: disable=missing-docstring
     def get_wind_file(self):
-        return self._aerodyn_input['WindFile']
+        return self._wind_input.get_wind_file()
 
     #pylint: disable=missing-docstring
     def set_wind_file(self, file):
-        self._aerodyn_input['WindFile'] = quote(os.path.abspath(file))
+        self._wind_input.set_wind_file(quote(os.path.abspath(file)))
         self._wind_is_explicit = True  # Don't generate wind task dependency
 
     # Properties of turbine, for which setting is not supported

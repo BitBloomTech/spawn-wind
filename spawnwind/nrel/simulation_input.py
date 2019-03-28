@@ -111,14 +111,6 @@ class TurbsimInput(NRELSimulationInput):
     """Handles contents of TurbSim (FAST wind generation) input file"""
 
 
-class AerodynInput(NRELSimulationInput):
-    """Handles contents of Aerodyn (FAST aerodynamics) input file"""
-    def _lines_with_paths(self):
-        num_foils = int(self['NumFoil'])
-        index, _ = self._get_index_and_parts('FoilNm')
-        return range(index, index + num_foils)
-
-
 class FastInput(NRELSimulationInput):
     """Handles contents of primary FAST input file"""
     def _lines_with_paths(self):

@@ -16,7 +16,7 @@ def test_inflow_wind_input_edits_right_filename(example_data_folder, type_, line
         lines = [NrelInputLine(line) for line in fp.readlines()]
     wind_input = InflowWindInput(lines, path.join(example_data_folder, 'fast_input_files'))
     wind_input['WindType'] = type_
-    wind_input.set_wind_file('"very/windy.wnd"')
+    wind_input.set_wind_file('very/windy.wnd')
     assert wind_input.get_wind_file() == 'very/windy.wnd'
     file_path = path.join(tmpdir, 'inflow.inp')
     wind_input.to_file(path.join(file_path))

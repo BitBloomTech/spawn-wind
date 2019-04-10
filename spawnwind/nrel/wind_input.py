@@ -60,17 +60,19 @@ class InflowWindInput(WindInput):
         return file_path
 
     def get_wind_file(self):
-        return self[self._get_wind_file_key()]
+        return self._get_wind_file_line().value
 
     def set_wind_file(self, file):
-        self[self._get_wind_file_key()] = file
+        self._get_wind_file_line().value = file
 
-    def _get_wind_file_key(self):
+    def _get_wind_file_line(self):
         type_ = int(self['WindType'])
-        if type_ == 2 or type_ == 3:
-            return 'Filename'
+        if type_ == 2:
+            return self._get_line('Filename')
+        elif type_ == 3:
+            return self._get_line('Filename', 2)
         elif type_ == 4:
-            return 'FilenameRoot'
+            return self._get_line('FilenameRoot')
         else:
             raise KeyError('Cannot set wind file in InflowWind, type_={}'.format(type_))
 

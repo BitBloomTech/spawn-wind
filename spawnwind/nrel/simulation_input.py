@@ -85,11 +85,17 @@ class NRELSimulationInput(SimulationInput):
     def __getitem__(self, key):
         return self._get_line(key).value.strip('"')
 
-    def _get_line(self, key):
-        for line in self._input_lines:
-            if line and line.key == key:
+    def _get_line(self, key, n=1):
+        generate = (line for line in self._input_lines if line.key == key)
+        try:
+            if n == 1:
+                return next(generate)
+            else:
+                for _ in range(n):
+                    line = next(generate)
                 return line
-        raise KeyError('parameter \'{}\' not found'.format(key))
+        except StopIteration:
+            raise KeyError('parameter \'{}\' not found'.format(key))
 
     def _get_index(self, key):
         for i, line in enumerate(self._input_lines):

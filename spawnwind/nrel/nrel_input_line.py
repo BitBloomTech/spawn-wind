@@ -22,20 +22,24 @@ class NrelInputLine:
 
     @staticmethod
     def _find_key_indices(line_str, start):
-        match = re.search('[a-zA-Z0-9_]+', line_str[start:])
+        match = re.search('[a-zA-Z0-9_()]+', line_str[start:])
         if match is None:
-            raise IOError("Could not find key")
+            return None, None
         return start + match.start(), start + match.end()
 
     @property
     def key(self):
         if self._key_begin is not None:
             return self._line_str[self._key_begin:self._key_end]
+        else:
+            return ''
 
     @property
     def value(self):
         if self._value_begin is not None:
             return self._line_str[self._value_begin:self._value_end]
+        else:
+            return ''
 
     @value.setter
     def value(self, new_value):
@@ -44,11 +48,15 @@ class NrelInputLine:
         self._line_str = self._line_str[:self._value_begin] + new_value + self._line_str[self._value_end:]
         length_increase = len(new_value) - self._value_end + self._value_begin
         self._value_end += length_increase
-        self._key_begin += length_increase
-        self._key_end += length_increase
+        if self._key_begin is not None:
+            self._key_begin += length_increase
+            self._key_end += length_increase
 
     def __bool__(self):
         return self._key_begin is not None and self._value_begin is not None
 
     def __str__(self):
-        return self._line_str
+        if self._line_str:
+            return self._line_str
+        else:
+            return '\n'

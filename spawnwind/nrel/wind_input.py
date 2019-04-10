@@ -20,11 +20,11 @@ class WindInput(NRELSimulationInput):
 
 
 class AerodynInput(WindInput):
-    """Handles contents of Aerodyn (FAST aerodynamics) input file"""
+    """Handles contents of Aerodyn (FAST aerodynamics) input file, which defines wind input for versions < 8.12"""
 
     def _lines_with_paths(self):
         num_foils = int(self['NumFoil'])
-        index, _ = self._get_index_and_parts('FoilNm')
+        index = self._get_index('FoilNm')
         return range(index, index + num_foils)
 
     @property
@@ -41,3 +41,36 @@ class AerodynInput(WindInput):
 
     def set_wind_file(self, file):
         self['WindFile'] = file
+
+
+class InflowWindInput(WindInput):
+    """Handles contents of InflowWind input file which handles wind input of FAST in versions >= 8.12"""
+
+    def _lines_with_paths(self):
+        keys = ['Filename', 'FilenameRoot', 'FileName_u', 'FileName_v', 'FileName_w']
+        return [self._get_index(k) for k in keys]
+
+    @property
+    def key(self):
+        return 'InflowFile'
+
+    def write(self, directory):
+        file_path = path.join(directory, 'InflowWind.ipt')
+        self.to_file(file_path)
+        return file_path
+
+    def get_wind_file(self):
+        return self[self._get_wind_file_key()]
+
+    def set_wind_file(self, file):
+        self[self._get_wind_file_key()] = file
+
+    def _get_wind_file_key(self):
+        type_ = int(self['WindType'])
+        if type_ == 2 or type_ == 3:
+            return 'Filename'
+        elif type_ == 4:
+            return 'FilenameRoot'
+        else:
+            raise KeyError('Cannot set wind file in InflowWind, type_={}'.format(type_))
+

@@ -20,6 +20,8 @@ from os import path
 import csv
 from spawn.simulation_inputs import SimulationInput
 from spawn.util.hash import string_hash
+from .nrel_input_line import NrelInputLine
+
 
 def _absolutise_path(line, root_dir, local_path):
     local_path = local_path.strip('"')
@@ -55,7 +57,7 @@ class NRELSimulationInput(SimulationInput):
         with open(file_path, 'r') as fp:
             input_lines = fp.readlines()
         root_folder = path.abspath(path.split(file_path)[0])
-        return cls(input_lines, root_folder)
+        return cls([NrelInputLine(line) for line in input_lines], root_folder)
 
     def to_file(self, file_path):
         """Writes the contents of the input file to disk
@@ -65,7 +67,7 @@ class NRELSimulationInput(SimulationInput):
         """
         with open(file_path, 'w') as fp:
             for line in self._input_lines:
-                fp.write(line)
+                fp.write(str(line))
 
     def hash(self):
         """Returns a hash of the contents of the file
@@ -73,34 +75,33 @@ class NRELSimulationInput(SimulationInput):
         :returns: The hash
         :rtype: str
         """
-        return string_hash('\n'.join(self._input_lines))
+        keys = [line.key for line in self._input_lines if line.key is not None]
+        values = [line.value for line in self._input_lines if line.value is not None]
+        return string_hash('\n'.join(keys + values))
 
     def __setitem__(self, key, value):
-        i, parts = self._get_index_and_parts(key)
-        self._input_lines[i] = self._input_lines[i].replace(parts[0], str(value).strip('"'))
+        self._get_line(key).value = str(value).strip('"')
 
     def __getitem__(self, key):
-        value = self._get_index_and_parts(key)[1][0]
-        return value.strip('"')
+        return self._get_line(key).value.strip('"')
 
-    @staticmethod
-    def _get_parts(line):
-        # CSV reader is the easiest way to interpret quoted strings encompassing spaces as one part
-        return next(csv.reader([line], delimiter=' ', quotechar='"', skipinitialspace=True))
+    def _get_line(self, key):
+        for line in self._input_lines:
+            if line and line.key == key:
+                return line
+        raise KeyError('parameter \'{}\' not found'.format(key))
 
-    def _get_index_and_parts(self, key):
+    def _get_index(self, key):
         for i, line in enumerate(self._input_lines):
-            parts = self._get_parts(line)
-            if len(parts) > 1 and parts[1] == key:
-                return i, parts
+            if line and line.key == key:
+                return i
         raise KeyError('parameter \'{}\' not found'.format(key))
 
     def _absolutise_paths(self, root_folder, lines):
         for i in lines:
-            parts = self._get_parts(self._input_lines[i])
-            rel_path = parts[0].strip('"')
-            self._input_lines[i] = self._input_lines[i].replace(rel_path,
-                                                                path.abspath(path.join(root_folder, rel_path)))
+            rel_path = self._input_lines[i].value
+            if rel_path:
+                self._input_lines[i].value = path.abspath(path.join(root_folder, rel_path))
 
     @staticmethod
     def _lines_with_paths():
@@ -117,8 +118,7 @@ class FastInput(NRELSimulationInput):
         def is_file_path(key):
             return key in ['TwrFile', 'ADFile', 'ADAMSFile'] or 'BldFile' in key
         lines = []
-        for i in range(len(self._input_lines)):
-            parts = self._get_parts(self._input_lines[i])
-            if len(parts) > 1 and is_file_path(parts[1]):
+        for i, line in enumerate(self._input_lines):
+            if is_file_path(line.key):
                 lines.append(i)
         return lines

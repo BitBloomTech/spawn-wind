@@ -10,7 +10,8 @@ from spawnwind.nrel.nrel_input_line import NrelInputLine
     ('"a spacey/path" ThePath   - a comment', 'a spacey/path', 'ThePath'),
     ('      "a spacey/path" ThePath   - a comment', 'a spacey/path', 'ThePath'),
     ('""  EmptyPath   - a comment', '', 'EmptyPath'),
-    ('---------------', None, None)
+    ('"path/to/file.txt"', 'path/to/file.txt', ''),
+    ('---------------', '', '')
 ])
 def test_key_and_value_are_correct(line, value, key):
     input_line = NrelInputLine(line)

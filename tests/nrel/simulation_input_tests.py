@@ -17,7 +17,9 @@
 from os import path
 import pytest
 import tempfile
-from spawnwind.nrel import TurbsimInput, AerodynInput, FastInput
+
+from spawnwind.nrel.nrel_input_line import NrelInputLine
+from spawnwind.nrel import TurbsimInput, AerodynInput, FastInput, NRELSimulationInput
 
 
 @pytest.mark.parametrize('cls,file,key', [
@@ -70,3 +72,27 @@ def test_can_handle_spaces_in_paths(examples_folder, cls, file, key):
     spacey_path = '"C:/this is a spacey/path.ipt"'
     _input[key] = spacey_path
     assert spacey_path.strip('"') == _input[key].strip('"')
+
+
+def test_can_overwrite_empty_quote(tmpdir):
+    lines = [NrelInputLine('""    ThePath   - This is just a comment')]
+    input_ = NRELSimulationInput(lines, tmpdir)
+    input_['ThePath'] = "a/path"
+    assert input_['ThePath'] == 'a/path'
+    filepath = path.join(tmpdir, 'input.ipt')
+    input_.to_file(filepath)
+    with open(filepath, 'r') as fp:
+        contents = fp.read()
+    assert contents == '"a/path"    ThePath   - This is just a comment'
+
+
+def test_hash_is_different_for_different_inputs():
+    lines = [
+        '14            Ref   - This is just a comment',
+        '"nrel.txt"    Path   - This is just a comment'
+    ]
+    input1 = NRELSimulationInput([NrelInputLine(line) for line in lines], '')
+    lines[0] = lines[0].replace('14', '15')
+    input2 = NRELSimulationInput([NrelInputLine(line) for line in lines], '')
+    assert input1.hash() != input2.hash()
+

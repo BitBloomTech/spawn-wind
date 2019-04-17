@@ -30,24 +30,25 @@ _example_data_folder = path.join(__home_dir, pardir, 'example_data')
 
 EXE_PATHS = {
     'turbsim': path.join(_example_data_folder, 'TurbSim.exe'),
-    'fast': path.join(_example_data_folder, 'FASTv7.0.2.exe')
+    'fast_v7': path.join(_example_data_folder, 'FASTv7.0.2.exe'),
+    'fast_v8': path.join(_example_data_folder, 'FASTv8.16_Win32.exe')
 }
-
-@pytest.fixture(scope='module')
-def turbsim_exe():
-    return path.join(_example_data_folder, 'TurbSim.exe')
-
-@pytest.fixture(scope='module')
-def fast_exe():
-    return path.join(_example_data_folder, 'FASTv7.0.2.exe')
 
 @pytest.fixture(scope='module')
 def turbsim_input_file():
     return path.join(_example_data_folder, 'fast_input_files', 'TurbSim.inp')
 
 @pytest.fixture(scope='module')
-def fast_input_file():
+def inflowwind_input_file():
+    return path.join(_example_data_folder, 'fast_input_files', 'v8', 'InflowWind.inp')
+
+@pytest.fixture(scope='module')
+def fast_v7_input_file():
     return path.join(_example_data_folder, 'fast_input_files', 'NRELOffshrBsline5MW_Onshore.fst')
+
+@pytest.fixture(scope='module')
+def fast_v8_input_file():
+    return path.join(_example_data_folder, 'fast_input_files', 'v8', 'NREL5MW.fst')
 
 @pytest.fixture(scope='module')
 def example_data_folder():
@@ -57,34 +58,23 @@ def example_data_folder():
 def examples_folder(example_data_folder):
     return path.join(example_data_folder, 'fast_input_files')
 
-@pytest.fixture
-def turbsim_exe(example_data_folder):
-    return path.join(example_data_folder, 'TurbSim.exe')
-
-@pytest.fixture
-def fast_exe(example_data_folder):
-    return path.join(example_data_folder, 'FASTv7.0.2.exe')
-
 @pytest.fixture(scope='session', autouse=True)
 def configure_luigi():
     luigi.configuration.get_config().set('WindGenerationTask', '_runner_type', 'process')
     luigi.configuration.get_config().set('WindGenerationTask', '_exe_path', EXE_PATHS['turbsim'])
     luigi.configuration.get_config().set('FastSimulationTask', '_runner_type', 'process')
-    luigi.configuration.get_config().set('FastSimulationTask', '_exe_path', EXE_PATHS['fast'])
+    luigi.configuration.get_config().set('FastSimulationTask', '_exe_path', EXE_PATHS['fast_v7'])
 
 @pytest.fixture
-def spawner(example_data_folder, tmpdir):
-    wind_spawner = TurbsimSpawner(TurbsimInput.from_file(path.join(example_data_folder, 'fast_input_files',
-                                                                   'TurbSim.inp')))
-    return FastSimulationSpawner(FastInput.from_file(path.join(example_data_folder, 'fast_input_files',
-                                                               'NRELOffshrBsline5MW_Onshore.fst')),
-                                 wind_spawner, tmpdir)
+def spawner(turbsim_input_file, fast_v7_input_file, tmpdir):
+    wind_spawner = TurbsimSpawner(TurbsimInput.from_file(turbsim_input_file))
+    return FastSimulationSpawner(FastInput.from_file(fast_v7_input_file), wind_spawner, tmpdir)
 
 @pytest.fixture
 def plugin_loader(tmpdir):
     default_config = DefaultConfiguration()
     command_line_configuration = CommandLineConfiguration(
-        turbsim_exe=EXE_PATHS['turbsim'], fast_exe=EXE_PATHS['fast'],
+        turbsim_exe=EXE_PATHS['turbsim'], fast_exe=EXE_PATHS['fast_v7'],
         turbsim_base_file=path.join(_example_data_folder, 'fast_input_files', 'TurbSim.inp'),
         fast_base_file=path.join(_example_data_folder, 'fast_input_files', 'NRELOffshrBsline5MW_Onshore.fst'),
         turbsim_working_dir=_example_data_folder,

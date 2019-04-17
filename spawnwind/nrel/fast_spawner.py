@@ -22,14 +22,14 @@ import copy
 from spawn.util import quote
 
 from ..spawners import AeroelasticSimulationSpawner
-from .wind_input import AerodynInput
+from .wind_input import AerodynInput, InflowWindInput
 from .tasks import FastSimulationTask
 
 #pylint: disable=too-many-public-methods
 class FastSimulationSpawner(AeroelasticSimulationSpawner):
     """Spawns FAST simulation tasks with wind generation dependency if necessary"""
 
-    def __init__(self, fast_input, wind_spawner, prereq_outdir):
+    def __init__(self, fast_input, wind_spawner, prereq_outdir, version='v7'):
         """Initialises :class:`FastSimulationSpawner`
 
         :param fast_input: The FAST input
@@ -43,7 +43,10 @@ class FastSimulationSpawner(AeroelasticSimulationSpawner):
         self._wind_spawner = wind_spawner
         self._prereq_outdir = prereq_outdir
         # non-arguments:
-        self._wind_input = AerodynInput.from_file(self._input['ADFile'])
+        if version == 'v7':
+            self._wind_input = AerodynInput.from_file(self._input['ADFile'])
+        else:
+            self._wind_input = InflowWindInput.from_file(self._input['InflowFile'])
         self._wind_task_cache = {}
         self._wind_is_explicit = False
         # intermediate parameters

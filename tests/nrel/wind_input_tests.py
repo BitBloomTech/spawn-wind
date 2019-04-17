@@ -10,11 +10,10 @@ from spawnwind.nrel.wind_input import InflowWindInput
     (3, 20),
     (4, 22)
 ])
-def test_inflow_wind_input_edits_right_filename(example_data_folder, type_, line_number, tmpdir):
-    filename = path.join(example_data_folder, 'fast_input_files', 'InflowWind.inp')
-    with open(filename, 'r') as fp:
+def test_inflow_wind_input_edits_right_filename(example_data_folder, inflowwind_input_file, type_, line_number, tmpdir):
+    with open(inflowwind_input_file, 'r') as fp:
         lines = [NrelInputLine(line) for line in fp.readlines()]
-    wind_input = InflowWindInput(lines, path.join(example_data_folder, 'fast_input_files'))
+    wind_input = InflowWindInput(lines, path.dirname(path.abspath(inflowwind_input_file)))
     wind_input['WindType'] = type_
     wind_input.set_wind_file('very/windy.wnd')
     assert wind_input.get_wind_file() == 'very/windy.wnd'

@@ -22,7 +22,8 @@ from luigi import configuration
 
 from spawn.util.validation import validate_file, validate_dir
 
-from .simulation_input import TurbsimInput, FastInput
+from .simulation_input import TurbsimInput
+from .fast_input import Fast7Input
 from .turbsim_spawner import TurbsimSpawner
 from .fast_spawner import FastSimulationSpawner
 from .tasks import WindGenerationTask, FastSimulationTask
@@ -64,7 +65,7 @@ def create_spawner(
     luigi_config.set(FastSimulationTask.__name__, '_working_dir', fast_working_dir)
 
     wind_spawner = TurbsimSpawner(TurbsimInput.from_file(turbsim_base_file))
-    return FastSimulationSpawner(FastInput.from_file(fast_base_file), wind_spawner, path.join(outdir, prereq_outdir))
+    return FastSimulationSpawner(Fast7Input.from_file(fast_base_file), wind_spawner, path.join(outdir, prereq_outdir))
 
 
 #pylint: disable=invalid-name

@@ -17,7 +17,6 @@
 """Contains definitions for NREL :class:`SimulationInput`
 """
 from os import path
-import csv
 from spawn.simulation_inputs import SimulationInput
 from spawn.util.hash import string_hash
 from .nrel_input_line import NrelInputLine
@@ -103,6 +102,13 @@ class NRELSimulationInput(SimulationInput):
                 return i
         raise KeyError('parameter \'{}\' not found'.format(key))
 
+    def _get_indices_if(self, pred):
+        lines = []
+        for i, line in enumerate(self._input_lines):
+            if pred(line.key):
+                lines.append(i)
+        return lines
+
     def _absolutise_paths(self, root_folder, lines):
         for i in lines:
             rel_path = self._input_lines[i].value
@@ -117,14 +123,3 @@ class NRELSimulationInput(SimulationInput):
 class TurbsimInput(NRELSimulationInput):
     """Handles contents of TurbSim (FAST wind generation) input file"""
 
-
-class FastInput(NRELSimulationInput):
-    """Handles contents of primary FAST input file"""
-    def _lines_with_paths(self):
-        def is_file_path(key):
-            return key in ['TwrFile', 'ADFile', 'ADAMSFile'] or 'BldFile' in key
-        lines = []
-        for i, line in enumerate(self._input_lines):
-            if is_file_path(line.key):
-                lines.append(i)
-        return lines

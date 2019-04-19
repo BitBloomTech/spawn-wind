@@ -22,14 +22,14 @@ import copy
 from spawn.util import quote
 
 from ..spawners import AeroelasticSimulationSpawner
-from .wind_input import AerodynInput, InflowWindInput
 from .tasks import FastSimulationTask
+
 
 #pylint: disable=too-many-public-methods
 class FastSimulationSpawner(AeroelasticSimulationSpawner):
     """Spawns FAST simulation tasks with wind generation dependency if necessary"""
 
-    def __init__(self, fast_input, wind_spawner, prereq_outdir, version='v7'):
+    def __init__(self, fast_input, wind_spawner, prereq_outdir):
         """Initialises :class:`FastSimulationSpawner`
 
         :param fast_input: The FAST input
@@ -43,12 +43,7 @@ class FastSimulationSpawner(AeroelasticSimulationSpawner):
         self._wind_spawner = wind_spawner
         self._prereq_outdir = prereq_outdir
         # non-arguments:
-        if version == 'v7':
-            self._wind_input = AerodynInput.from_file(self._input['ADFile'])
-        else:
-            self._wind_input = InflowWindInput.from_file(self._input['InflowFile'])
-        self._wind_task_cache = {}
-        self._wind_is_explicit = False
+        self._wind_input = fast_input.get_wind_input(wind_spawner)
         # intermediate parameters
         self._pitch_manoeuvre_rate = None
         self._yaw_manoeuvre_rate = None
@@ -68,7 +63,7 @@ class FastSimulationSpawner(AeroelasticSimulationSpawner):
             raise ValueError('Must provide an absolute path')
         if not os.path.isdir(path):
             os.makedirs(path)
-        wind_tasks = self._spawn_preproc_tasks(metadata)
+        wind_tasks = self._wind_input.get_wind_gen_tasks(self._prereq_outdir, metadata)
         self._input[self._wind_input.key] = self._wind_input.write(path)
         sim_input_file = os.path.join(path, 'simulation.ipt')
         self._input.to_file(sim_input_file)
@@ -79,21 +74,6 @@ class FastSimulationSpawner(AeroelasticSimulationSpawner):
             _metadata=metadata
         )
         return sim_task
-
-    def _spawn_preproc_tasks(self, metadata):
-        # Generate new wind file if needed
-        if self._wind_is_explicit:
-            return []
-
-        wind_hash = self._wind_spawner.input_hash()
-        if wind_hash in self._wind_task_cache:
-            wind_task = self._wind_task_cache[wind_hash]
-        else:
-            outdir = os.path.join(self._prereq_outdir, wind_hash)
-            wind_task = self._wind_spawner.spawn(outdir, metadata)
-            self._wind_task_cache[wind_hash] = wind_task
-        self._wind_input.set_wind_file(quote(wind_task.wind_file_path))
-        return [wind_task]
 
     def branch(self):
         """Create a copy of this spawner
@@ -315,52 +295,51 @@ class FastSimulationSpawner(AeroelasticSimulationSpawner):
     # Properties deferred to wind generation spawner:
     #pylint: disable=missing-docstring
     def get_wind_speed(self):
-        return self._wind_spawner.wind_speed
+        return self._wind_input.wind_speed
 
     #pylint: disable=missing-docstring
     def set_wind_speed(self, speed):
-        self._wind_spawner.wind_speed = speed
+        self._wind_input.wind_speed = speed
 
     #pylint: disable=missing-docstring
     def get_turbulence_intensity(self):
-        return self._wind_spawner.turbulence_intensity
+        return self._wind_input.turbulence_intensity
 
     #pylint: disable=missing-docstring
     def set_turbulence_intensity(self, turbulence_intensity):
-        self._wind_spawner.turbulence_intensity = turbulence_intensity
+        self._wind_input.turbulence_intensity = turbulence_intensity
 
     #pylint: disable=missing-docstring
     def get_turbulence_seed(self):
-        return self._wind_spawner.turbulence_seed
+        return self._wind_input.turbulence_seed
 
     #pylint: disable=missing-docstring
     def set_turbulence_seed(self, seed):
-        self._wind_spawner.turbulence_seed = seed
+        self._wind_input.turbulence_seed = seed
 
     #pylint: disable=missing-docstring
     def get_wind_shear(self):
-        return self._wind_spawner.wind_shear
+        return self._wind_input.wind_shear
 
     #pylint: disable=missing-docstring
     def set_wind_shear(self, exponent):
-        self._wind_spawner.wind_shear = exponent
+        self._wind_input.wind_shear = exponent
 
     #pylint: disable=missing-docstring
     def get_upflow(self):
-        return self._wind_spawner.upflow
+        return self._wind_input.upflow
 
     #pylint: disable=missing-docstring
     def set_upflow(self, angle):
-        self._wind_spawner.upflow = angle
+        self._wind_input.upflow = angle
 
     #pylint: disable=missing-docstring
     def get_wind_file(self):
-        return self._wind_input.get_wind_file()
+        return self._wind_input.wind_file
 
     #pylint: disable=missing-docstring
     def set_wind_file(self, file):
-        self._wind_input.set_wind_file(quote(os.path.abspath(file)))
-        self._wind_is_explicit = True  # Don't generate wind task dependency
+        self._wind_input.wind_file = os.path.abspath(file)
 
     # Properties of turbine, for which setting is not supported
     def get_number_of_blades(self):

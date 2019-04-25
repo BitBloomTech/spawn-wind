@@ -22,7 +22,7 @@ import numpy as np
 import math
 import luigi
 from wetb.fast import fast_io
-from spawnwind.nrel import FastInput, TurbsimInput, FastSimulationSpawner, TurbsimSpawner
+from spawnwind.nrel import Fast7Input, Fast8Input, TurbsimInput, FastSimulationSpawner, TurbsimSpawner
 
 def run_and_get_results(spawner, path_):
     task = spawner.spawn(str(path_), {})
@@ -30,29 +30,35 @@ def run_and_get_results(spawner, path_):
     data, info = fast_io.load_output(task.output().path)
     return pd.DataFrame(data, columns=info['attribute_names'])
 
-def _create_spawner(tmpdir, turbsim_input_file, fast_input_file, version):
+def _create_spawner(tmpdir, turbsim_input_file, fast_input_file, fast_input_cls):
     turbsim_input = TurbsimInput.from_file(turbsim_input_file)
     wind_spawner = TurbsimSpawner(turbsim_input)
-    fast_input = FastInput.from_file(fast_input_file)
-    spawner = FastSimulationSpawner(fast_input, wind_spawner, tmpdir, version)
+    fast_input = fast_input_cls.from_file(fast_input_file)
+    spawner = FastSimulationSpawner(fast_input, wind_spawner, tmpdir)
     spawner.wind_speed = 8.0
     spawner.output_start_time = 0.0
     spawner.simulation_time = 1.0
     return spawner
 
+@pytest.fixture(params=['v8'], scope='module')
+def version(request):
+    return request.param
 
-@pytest.fixture(params=['v7', 'v8'])
-def spawner(request, tmpdir, turbsim_input_file, fast_v7_input_file, fast_v8_input_file):
-    if request.param == 'v7':
-        return _create_spawner(tmpdir, turbsim_input_file, fast_v7_input_file, 'v7')
-    elif request.param == 'v8':
-        return _create_spawner(tmpdir, turbsim_input_file, fast_v8_input_file, 'v8')
+@pytest.fixture(scope='function')
+def spawner(version, tmpdir, turbsim_input_file, fast_v7_input_file, fast_v8_input_file):
+    if version == 'v7':
+        return _create_spawner(tmpdir, turbsim_input_file, fast_v7_input_file, Fast7Input)
+    elif version == 'v8':
+        return _create_spawner(tmpdir, turbsim_input_file, fast_v8_input_file, Fast8Input)
 
 
 @pytest.fixture(scope='module')
-def baseline(turbsim_input_file, fast_v7_input_file):
+def baseline(version, turbsim_input_file, fast_v7_input_file, fast_v8_input_file):
     with tempfile.TemporaryDirectory() as tmpdir:
-        s = _create_spawner(tmpdir, turbsim_input_file, fast_v7_input_file)
+        if version == 'v7':
+            s = _create_spawner(tmpdir, turbsim_input_file, fast_v7_input_file, Fast7Input)
+        elif version == 'v8':
+            s = _create_spawner(tmpdir, turbsim_input_file, fast_v8_input_file, Fast8Input)
         return run_and_get_results(s, tmpdir)
 
 

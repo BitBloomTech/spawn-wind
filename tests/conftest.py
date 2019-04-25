@@ -23,7 +23,7 @@ import luigi.configuration
 from spawn.plugins import PluginLoader
 from spawn.config import DefaultConfiguration, CompositeConfiguration, CommandLineConfiguration
 
-from spawnwind.nrel import TurbsimInput, FastInput, TurbsimSpawner, FastSimulationSpawner
+from spawnwind.nrel import TurbsimInput, Fast7Input, TurbsimSpawner, FastSimulationSpawner
 
 __home_dir = path.dirname(path.realpath(__file__))
 _example_data_folder = path.join(__home_dir, pardir, 'example_data')
@@ -63,12 +63,12 @@ def configure_luigi():
     luigi.configuration.get_config().set('WindGenerationTask', '_runner_type', 'process')
     luigi.configuration.get_config().set('WindGenerationTask', '_exe_path', EXE_PATHS['turbsim'])
     luigi.configuration.get_config().set('FastSimulationTask', '_runner_type', 'process')
-    luigi.configuration.get_config().set('FastSimulationTask', '_exe_path', EXE_PATHS['fast_v7'])
+    luigi.configuration.get_config().set('FastSimulationTask', '_exe_path', EXE_PATHS['fast_v8'])
 
 @pytest.fixture
 def spawner(turbsim_input_file, fast_v7_input_file, tmpdir):
     wind_spawner = TurbsimSpawner(TurbsimInput.from_file(turbsim_input_file))
-    return FastSimulationSpawner(FastInput.from_file(fast_v7_input_file), wind_spawner, tmpdir)
+    return FastSimulationSpawner(Fast7Input.from_file(fast_v7_input_file), wind_spawner, tmpdir)
 
 @pytest.fixture
 def plugin_loader(tmpdir):

@@ -67,6 +67,7 @@ class NRELSimulationInput(SimulationInput):
         with open(file_path, 'w') as fp:
             for line in self._input_lines:
                 fp.write(str(line))
+        return file_path
 
     def hash(self):
         """Returns a hash of the contents of the file

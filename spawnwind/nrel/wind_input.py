@@ -23,10 +23,6 @@ class WindInput(NRELSimulationInput):
         """Key im primary FAST input file"""
         raise NotImplementedError()
 
-    def write(self, directory):
-        """Write input file into directory, returning full path of written file"""
-        raise NotImplementedError()
-
     @property
     def wind_type(self):
         raise NotImplementedError()
@@ -97,6 +93,7 @@ class WindInput(NRELSimulationInput):
 
 class AerodynInput(WindInput):
     """Handles contents of Aerodyn (FAST aerodynamics) input file, which defines wind input for versions < 8.12"""
+    key = 'ADFile'
 
     def get_wind_gen_tasks(self, prereq_dir, metadata):
         # Generate new wind file if needed
@@ -106,15 +103,6 @@ class AerodynInput(WindInput):
         wind_task = self._spawn_wind_gen_task(prereq_dir, metadata)
         self._set_wind_file(wind_task.wind_file_path)
         return [wind_task]
-
-    @property
-    def key(self):
-        return 'ADFile'
-
-    def write(self, directory):
-        aerodyn_file_path = path.join(directory, 'aerodyn.ipt')
-        self.to_file(aerodyn_file_path)
-        return aerodyn_file_path
 
     @property
     def wind_type(self):
@@ -135,6 +123,7 @@ class AerodynInput(WindInput):
 
 class InflowWindInput(WindInput):
     """Handles contents of InflowWind input file which handles wind input of FAST in versions >= 8.12"""
+    key = 'InflowFile'
     _wind_type_names = {
         1: 'steady',
         2: 'uniform',
@@ -154,21 +143,12 @@ class InflowWindInput(WindInput):
 
     def get_wind_gen_tasks(self, prereq_dir, metadata):
         # Generate new wind file if needed
-        if self.wind_type == 'steady' or self._wind_is_explicit:
+        if self.wind_type == 'steady' or self.wind_type == 'uniform' or self._wind_is_explicit:
             return []
 
         wind_task = self._spawn_wind_gen_task(prereq_dir, metadata)
         self._set_wind_file(wind_task.wind_file_path)
         return [wind_task]
-
-    @property
-    def key(self):
-        return 'InflowFile'
-
-    def write(self, directory):
-        file_path = path.join(directory, 'InflowWind.inp')
-        self.to_file(file_path)
-        return file_path
 
     @property
     def wind_type(self):
@@ -180,6 +160,20 @@ class InflowWindInput(WindInput):
         if type_name not in self._wind_type_numbers:
             raise ValueError('Invalid wind type')
         self['WindType'] = self._wind_type_numbers[type_name]
+
+    @property
+    def wind_speed(self):
+        if self.wind_type == 'steady':
+            return float(self['HWindSpeed'])
+        else:
+            return float(self._wind_gen_spawner.wind_speed)
+
+    @wind_speed.setter
+    def wind_speed(self, speed):
+        if self.wind_type == 'steady':
+            self['HWindSpeed'] = speed
+        else:
+            self._wind_gen_spawner.wind_speed = speed
 
     @property
     def wind_file(self):
@@ -203,4 +197,8 @@ class InflowWindInput(WindInput):
             return self._get_line('FilenameRoot')
         else:
             raise KeyError('Cannot find wind file in InflowWind, type_={}'.format(type_))
+
+    def _set_wind_file(self, file):
+        self._get_wind_file_line().value = file
+
 

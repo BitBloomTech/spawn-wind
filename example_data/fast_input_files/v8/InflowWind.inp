@@ -2,8 +2,8 @@
 This is a sample Inflow-Wind input file.
 ---------------------------------------------------------------------------------------------------------------
 True Echo - Echo input data to <RootName>.ech (flag)
-1 WindType - switch for wind file type (switch) [1=steady; 2=uniform; 3=binary TurbSim FF; 4=binary Bladed-style FF; 5=HAWC format; 6=User…
-60.0 PropogationDir - Direction of wind propogation (meteorological rotation from aligned with X (positive rotates towards -Y) -- degrees)
+2 WindType - switch for wind file type (switch) [1=steady; 2=uniform; 3=binary TurbSim FF; 4=binary Bladed-style FF; 5=HAWC format; 6=User…
+0.0 PropogationDir - Direction of wind propogation (meteorological rotation from aligned with X (positive rotates towards -Y) -- degrees)
 2 NWindVel - Number of points to output the wind velocity (0 to 9)
 0,10 WindVxiList - List of coordinates in the inertial X direction (m)
 0,0 WindVyiList - List of coordinates in the inertial Y direction (m)
@@ -13,13 +13,13 @@ True Echo - Echo input data to <RootName>.ech (flag)
 90.0 RefHt - Reference height for horizontal wind speed (m)
  0.14 PLexp - Power law exponent (-)
 ================== Parameters for Uniform wind file [used only for WindType = 2] ============================
-"Test001.hh" Filename - Filename of time series data for uniform wind field (-)
+"..\wind_files\NWP12.0.wnd" Filename - Filename of time series data for uniform wind field (-)
 90.0 RefHt - Reference height for horizontal wind speed (m)
 100.0 RefLength - Reference length for linear horizontal and vertical sheer (m)
 ================== Parameters for Binary TurbSim Full-Field files [used only for WindType = 3] ==============
 "" Filename - Name of the Full field wind file to use (.bts)
 ================== Parameters for Binary Bladed-style Full-Field files [used only for WindType = 4] =========
-"" FilenameRoot - Name of the Full field wind file to use (.wnd, .sum)
+""  FilenameRoot - Name of the Full field wind file to use (.wnd, .sum)
 T TowerFile - Have tower file (.twr) (flag)
 ================== Parameters for HAWC-format binary files [Only used with WindType = 5] =====================
 "basic_5u.bin" FileName_u - name of the file containing the u-component fluctuating wind (.bin)

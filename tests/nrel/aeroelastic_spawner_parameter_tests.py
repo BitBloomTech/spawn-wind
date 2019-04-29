@@ -61,6 +61,28 @@ def baseline(version, turbsim_input_file, fast_v7_input_file, fast_v8_input_file
             s = _create_spawner(tmpdir, turbsim_input_file, fast_v8_input_file, Fast8Input)
         return run_and_get_results(s, tmpdir)
 
+@pytest.fixture(scope='module')
+def turbulent_baseline(version, turbsim_input_file, fast_v7_input_file, fast_v8_input_file):
+    with tempfile.TemporaryDirectory() as tmpdir:
+        if version == 'v7':
+            s = _create_spawner(tmpdir, turbsim_input_file, fast_v7_input_file, Fast7Input)
+        elif version == 'v8':
+            s = _create_spawner(tmpdir, turbsim_input_file, fast_v8_input_file, Fast8Input)
+        s.wind_type = 'bladed'
+        return run_and_get_results(s, tmpdir)
+
+@pytest.fixture
+def wind_keys(version):
+    if version == 'v7':
+        return {
+            'longitudinal': 'WindVxi',
+            'vertical': 'WindVzi'
+        }
+    elif version == 'v8':
+        return {
+            'longitudinal': 'Wind1VelX',
+            'vertical': 'Wind1VelZ'
+        }
 
 @pytest.mark.parametrize('property,type', [
     ('output_start_time', float),
@@ -201,50 +223,66 @@ def test_grid_loss(spawner, tmpdir):
     assert res['GenPwr'].iloc[-1] == 0.0
     assert res['GenTq'].iloc[-1] == 0.0
 
+turb_wind_types = ['bladed', 'turbsim']
 
 @pytest.mark.skipif('sys.platform != "win32"')
-def test_turbulence_seed(baseline, spawner, tmpdir):
+@pytest.mark.parametrize('wind_type', turb_wind_types)
+def test_turbulence_seed(turbulent_baseline, spawner, tmpdir, wind_keys, wind_type):
+    spawner.wind_type = wind_type
     spawner.turbulence_seed += 1
     res = run_and_get_results(spawner, tmpdir)
-    assert np.all(baseline['WindVxi'] != res['WindVxi'])
+    assert np.all(turbulent_baseline[wind_keys['longitudinal']] != res[wind_keys['longitudinal']])
 
 
 @pytest.mark.skipif('sys.platform != "win32"')
-def test_wind_speed(baseline, spawner, tmpdir):
+@pytest.mark.parametrize('wind_type', turb_wind_types)
+def test_wind_speed(turbulent_baseline, spawner, tmpdir, wind_keys, wind_type):
+    spawner.wind_type = wind_type
+    spawner.wind_type = 'bladed'
     spawner.wind_speed = 2 * spawner.wind_speed
     res = run_and_get_results(spawner, tmpdir)
-    assert np.mean(res['WindVxi']) == pytest.approx(2*np.mean(baseline['WindVxi']), rel=0.1)
+    assert np.mean(res[wind_keys['longitudinal']]) == pytest.approx(2*np.mean(turbulent_baseline[wind_keys['longitudinal']]), rel=0.1)
 
 
 @pytest.mark.skipif('sys.platform != "win32"')
-def test_turbulence_intensity(baseline, spawner, tmpdir):
+@pytest.mark.parametrize('wind_type', turb_wind_types)
+def test_turbulence_intensity(turbulent_baseline, spawner, tmpdir, wind_keys, wind_type):
+    spawner.wind_type = wind_type
     assert 1.0 < spawner.turbulence_intensity < 100.0
     spawner.turbulence_intensity = 2 * spawner.turbulence_intensity
     res = run_and_get_results(spawner, tmpdir)
-    assert np.std(res['WindVxi']) == pytest.approx(2*np.std(baseline['WindVxi']), rel=1e-3)
+    assert np.std(res[wind_keys['longitudinal']]) == pytest.approx(2*np.std(turbulent_baseline[wind_keys['longitudinal']]), rel=1e-3)
 
 
 @pytest.mark.skipif('sys.platform != "win32"')
-def test_turbulence_seed(baseline, spawner, tmpdir):
+@pytest.mark.parametrize('wind_type', turb_wind_types)
+def test_turbulence_seed(turbulent_baseline, spawner, tmpdir, wind_keys, wind_type):
+    spawner.wind_type = wind_type
     spawner.turbulence_seed += 1
     res = run_and_get_results(spawner, tmpdir)
-    assert np.all(baseline['WindVxi'] != res['WindVxi'])
+    assert np.all(turbulent_baseline[wind_keys['longitudinal']] != res[wind_keys['longitudinal']])
 
 
 @pytest.mark.skipif('sys.platform != "win32"')
-def test_wind_shear(baseline, spawner, tmpdir):
+@pytest.mark.parametrize('wind_type', turb_wind_types)
+def test_wind_shear(turbulent_baseline, spawner, tmpdir, wind_type):
+    spawner.wind_type = wind_type
     spawner.wind_shear = 0.3
     res = run_and_get_results(spawner, tmpdir)
-    assert np.all(res['YawBrMyp'] > baseline['YawBrMyp'])  # increase in shear gives predominantly 0P increase in tower-top overturning moment
+    # increase in shear gives predominantly 0P increase in tower-top overturning moment
+    # first few time steps sometimes don't match the overall trend so ignore them
+    assert np.all((res['YawBrMyp'] > turbulent_baseline['YawBrMyp'])[5:])
 
 
 @pytest.mark.skipif('sys.platform != "win32"')
-def test_upflow(baseline, spawner, tmpdir):
+@pytest.mark.parametrize('wind_type', turb_wind_types)
+def test_upflow(turbulent_baseline, spawner, tmpdir, wind_keys, wind_type):
+    spawner.wind_type = wind_type
     spawner.upflow = 10.0
     res = run_and_get_results(spawner, tmpdir)
-    assert np.mean(res['WindVxi']) < np.mean(baseline['WindVxi'])
-    upflow_baseline = np.mean(np.arctan2(baseline['WindVzi'], baseline['WindVxi']))
-    upflow_new = np.mean(np.arctan2(res['WindVzi'], res['WindVxi']))
+    assert np.mean(res[wind_keys['longitudinal']]) < np.mean(turbulent_baseline[wind_keys['longitudinal']])
+    upflow_baseline = np.mean(np.arctan2(turbulent_baseline[wind_keys['vertical']], turbulent_baseline[wind_keys['longitudinal']]))
+    upflow_new = np.mean(np.arctan2(res[wind_keys['vertical']], res[wind_keys['longitudinal']]))
     assert math.degrees(upflow_new - upflow_baseline) == pytest.approx(spawner.upflow, abs=0.1)
 
 

@@ -66,9 +66,12 @@ def configure_luigi():
     luigi.configuration.get_config().set('FastSimulationTask', '_exe_path', EXE_PATHS['fast_v8'])
 
 @pytest.fixture
-def spawner(turbsim_input_file, fast_v7_input_file, tmpdir):
-    wind_spawner = TurbsimSpawner(TurbsimInput.from_file(turbsim_input_file))
-    return FastSimulationSpawner(Fast7Input.from_file(fast_v7_input_file), wind_spawner, tmpdir)
+def wind_gen_spawner(turbsim_input_file):
+    return TurbsimSpawner(TurbsimInput.from_file(turbsim_input_file))
+
+@pytest.fixture
+def spawner(wind_gen_spawner, fast_v7_input_file, tmpdir):
+    return FastSimulationSpawner(Fast7Input.from_file(fast_v7_input_file), wind_gen_spawner, tmpdir)
 
 @pytest.fixture
 def plugin_loader(tmpdir):

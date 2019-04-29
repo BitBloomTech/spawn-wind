@@ -106,11 +106,12 @@ class AerodynInput(WindInput):
 
     @property
     def wind_type(self):
-        return 'unknown'
+        return self._wind_gen_spawner.wind_type
 
     @wind_type.setter
     def wind_type(self, type_):
-        pass
+        if type_ in ['bladed', 'turbsim']:
+            self._wind_gen_spawner.wind_type = type_
 
     def _set_wind_file(self, file):
         self['WindFile'] = file
@@ -160,6 +161,8 @@ class InflowWindInput(WindInput):
         if type_name not in self._wind_type_numbers:
             raise ValueError('Invalid wind type')
         self['WindType'] = self._wind_type_numbers[type_name]
+        if type_name in ['bladed', 'turbsim']:
+            self._wind_gen_spawner.wind_type = type_name
 
     @property
     def wind_speed(self):
@@ -199,6 +202,7 @@ class InflowWindInput(WindInput):
             raise KeyError('Cannot find wind file in InflowWind, type_={}'.format(type_))
 
     def _set_wind_file(self, file):
-        self._get_wind_file_line().value = file
+        line = self._get_wind_file_line()
+        line.value = path.splitext(file)[0] if line.key == 'FilenameRoot' else file
 
 

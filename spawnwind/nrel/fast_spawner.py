@@ -301,7 +301,15 @@ class FastSimulationSpawner(AeroelasticSimulationSpawner):
         self._servodyn_input['GenTiStp'] = True
         self._servodyn_input['TimGenOf'] = time
 
-    # Properties deferred to wind generation spawner:
+    # Properties deferred to wind input:
+    #pylint: disable=missing-docstring
+    def get_wind_type(self):
+        return self._wind_input.wind_type
+
+    #pylint: disable=missing-docstring
+    def set_wind_type(self, wind_type):
+        self._wind_input.wind_type = wind_type
+
     #pylint: disable=missing-docstring
     def get_wind_speed(self):
         return self._wind_input.wind_speed

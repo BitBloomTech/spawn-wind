@@ -20,7 +20,7 @@ True Echo - Echo input data to <RootName>.ech (flag)
 "" Filename - Name of the Full field wind file to use (.bts)
 ================== Parameters for Binary Bladed-style Full-Field files [used only for WindType = 4] =========
 ""  FilenameRoot - Name of the Full field wind file to use (.wnd, .sum)
-T TowerFile - Have tower file (.twr) (flag)
+F TowerFile - Have tower file (.twr) (flag)
 ================== Parameters for HAWC-format binary files [Only used with WindType = 5] =====================
 "basic_5u.bin" FileName_u - name of the file containing the u-component fluctuating wind (.bin)
 "basic_5v.bin" FileName_v - name of the file containing the v-component fluctuating wind (.bin)

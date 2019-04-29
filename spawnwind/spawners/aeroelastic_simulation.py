@@ -95,6 +95,7 @@ class AeroelasticSimulationSpawner(TaskSpawner):
     )
 
     # Wind properties
+    wind_type = StringProperty(doc="Input wind type, one of {'steady', 'uniform', 'turbsim'}", abstract=True)
     wind_speed = FloatProperty(doc='Mean wind speed in m/s', abstract=True)
     turbulence_intensity = FloatProperty(
         doc='Turbulence intensity as a percentage: ratio of wind speed standard deviation to mean wind speed',

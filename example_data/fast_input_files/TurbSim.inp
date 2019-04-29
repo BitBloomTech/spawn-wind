@@ -21,7 +21,7 @@ True                Clockwise       - Clockwise rotation looking downwind? (used
 30                 AnalysisTime    - Length of analysis time series [seconds] (program will add time if necessary: AnalysisTime = MAX(AnalysisTime, UsableTime+GridWidth/MeanHHWS) )
 30                 UsableTime      - Usable length of output time series [seconds] (program will add GridWidth/MeanHHWS seconds)
 90.0                HubHt           - Hub height [m] (should be > 0.5*GridHeight)
-140.00              GridHeight      - Grid height [m] 
+159.00              GridHeight      - Grid height [m]
 140.00              GridWidth       - Grid width [m] (should be >= 2*(RotorRadius+ShaftLength))
 0                   VFlowAng        - Vertical mean flow (uptilt) angle [degrees]
 0                   HFlowAng        - Horizontal mean flow (skew) angle [degrees]

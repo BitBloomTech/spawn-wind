@@ -41,10 +41,11 @@ class NRELSimulationInput(SimulationInput):
         :type root_folder: path-like
         """
         self._input_lines = input_lines
+        self._root_folder = root_folder
         self._absolutise_paths(root_folder, self._lines_with_paths())
 
     @classmethod
-    def from_file(cls, file_path):
+    def from_file(cls, file_path, **kwargs):
         """Creates a :class:`NRELSimulationInput` by loading a file
 
         :param file_path: The file path to load
@@ -56,7 +57,7 @@ class NRELSimulationInput(SimulationInput):
         with open(file_path, 'r') as fp:
             input_lines = fp.readlines()
         root_folder = path.abspath(path.split(file_path)[0])
-        return cls([NrelInputLine(line) for line in input_lines], root_folder)
+        return cls([NrelInputLine(line) for line in input_lines], root_folder, **kwargs)
 
     def to_file(self, file_path):
         """Writes the contents of the input file to disk
@@ -78,6 +79,14 @@ class NRELSimulationInput(SimulationInput):
         keys = [line.key for line in self._input_lines if line.key is not None]
         values = [line.value for line in self._input_lines if line.value is not None]
         return string_hash('\n'.join(keys + values))
+
+    def get_on_blade(self, base_key, blade_number):
+        key = base_key + '({})'.format(blade_number)
+        return self[key]
+
+    def set_on_blade(self, base_key, blade_number, value):
+        key = base_key + '({})'.format(blade_number)
+        self[key] = value
 
     def __setitem__(self, key, value):
         self._get_line(key).value = str(value).strip('"')

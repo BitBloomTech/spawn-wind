@@ -41,7 +41,11 @@ def _create_spawner(tmpdir, turbsim_input_file, fast_input_file, fast_input_cls)
     return spawner
 
 @pytest.fixture(params=['v8'], scope='module')
-def version(request):
+def version(request, exe_paths):
+    if request.param == 'v8':
+        luigi.configuration.get_config().set('FastSimulationTask', '_exe_path', exe_paths['fast_v8'])
+    elif request.param == 'v7':
+        luigi.configuration.get_config().set('FastSimulationTask', '_exe_path', exe_paths['fast_v7'])
     return request.param
 
 @pytest.fixture(scope='function')
@@ -124,7 +128,7 @@ def test_simulation_time(spawner, tmpdir):
 @pytest.mark.parametrize('key,value,output_name', [
     ('initial_rotor_speed', 7.0, 'RotSpeed'),
     ('initial_azimuth', 180.0, 'Azimuth'),
-    ('initial_yaw', 90.0, 'YawPzn'),
+    ('initial_yaw', 10.0, 'YawPzn'),
     ('initial_pitch', 30.0, 'BldPitch1')
 ])
 def test_initial_values(spawner, key, value, output_name, tmpdir):
@@ -170,7 +174,7 @@ def test_operating_mode(spawner, tmpdir):
 
 @pytest.mark.skipif('sys.platform != "win32"')
 def test_pitch_manoeuvre_all_blades(spawner, tmpdir):
-    spawner.simulation_time = 4.0
+    spawner.simulation_time = 5.0
     spawner.initial_pitch = 10.0
     spawner.final_pitch = 12.0
     spawner.pitch_manoeuvre_time = 1.0
@@ -181,7 +185,7 @@ def test_pitch_manoeuvre_all_blades(spawner, tmpdir):
 
 @pytest.mark.skipif('sys.platform != "win32"')
 def test_pitch_manoeuvre_one_blade(spawner, tmpdir):
-    spawner.simulation_time = 4.0
+    spawner.simulation_time = 5.0
     spawner.initial_pitch = 10.0
     spawner.blade_final_pitch[1] = 12.0
     spawner.blade_final_pitch[2] = 10.0
@@ -194,7 +198,7 @@ def test_pitch_manoeuvre_one_blade(spawner, tmpdir):
 
 @pytest.mark.skipif('sys.platform != "win32"')
 def test_pitch_control_start_time(spawner, tmpdir):
-    spawner.simulation_time = 2.0
+    spawner.simulation_time = 10.0
     spawner.wind_speed = 16.0
     spawner.pitch_control_start_time = 1.0
     res = run_and_get_results(spawner, tmpdir)
@@ -203,16 +207,18 @@ def test_pitch_control_start_time(spawner, tmpdir):
     assert np.std(pitch[10:]) > 0.0
 
 
+from matplotlib import pyplot
+
 @pytest.mark.skipif('sys.platform != "win32"')
 def test_yaw_manoeuvre(spawner, tmpdir):
     spawner.simulation_time = 4.0
-    spawner.initial_yaw = 5.0
-    spawner.final_yaw = 6.5
+    spawner.initial_yaw = 0.0
+    spawner.final_yaw = 1.5
     spawner.yaw_manoeuvre_time = 0.5
     spawner.yaw_manoeuvre_rate = 0.8
     res = run_and_get_results(spawner, tmpdir)
-    assert res['YawPzn'].iloc[0] == pytest.approx(5.0)
-    assert res['YawPzn'].iloc[-1] == pytest.approx(6.5)
+    assert res['YawPzn'].iloc[0] == pytest.approx(0.0, abs=0.001)
+    assert res['YawPzn'].iloc[-1] == pytest.approx(1.5, abs=0.01)
 
 
 @pytest.mark.skipif('sys.platform != "win32"')

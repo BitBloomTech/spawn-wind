@@ -124,6 +124,7 @@ True          TabDelim    - Use tab delimiters in text tabular output file? (fla
 "IPDefl1"                 - Blade 1 out-of-plane and in-plane deflections and tip twist
 "TwstDefl1"               - Blade 1 out-of-plane and in-plane deflections and tip twist
 "BldPitch1"               - Blade 1 pitch angle
+"YawPzn"                  - Yaw angle
 "Azimuth"                 - Blade 1 azimuth angle
 "RotSpeed"                - Low-speed shaft and high-speed shaft speeds
 "GenSpeed"                - Low-speed shaft and high-speed shaft speeds

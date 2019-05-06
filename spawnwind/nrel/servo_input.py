@@ -1,5 +1,3 @@
-from copy import deepcopy
-
 from .simulation_input import NRELSimulationInput
 
 
@@ -13,7 +11,7 @@ class FastServoInput(NRELSimulationInput):
     def from_nrel_input(cls, nrel_input, blade_range):
         if not isinstance(nrel_input, NRELSimulationInput):
             raise TypeError("'nrel_input' not of type 'NRELSimulationInput'")
-        return cls(blade_range, deepcopy(nrel_input._input_lines), nrel_input._root_folder)
+        return cls(blade_range, nrel_input._input_lines, nrel_input._root_folder)
 
     # Pitch
     def get_blade_pitch_manoeuvre_time(self, blade_number):
@@ -110,10 +108,9 @@ class Fast7ServoInput(FastServoInput):
         if self._pitch_manoeuvre_rate:  # is not None and != 0.0
             delta_pitch = (self.get_blade_final_pitch(blade_number) - initial_pitch) / self._pitch_manoeuvre_rate
             self.set_on_blade('TPitManE', blade_number,
-                              float(self.get_on_blade('TPitManS', blade_number) + delta_pitch))
+                              float(self.get_on_blade('TPitManS', blade_number)) + delta_pitch)
         else:
-            self.set_blade_final_pitch(blade_number, initial_pitch)
-            self.set_blade_pitch_manoeuvre_end_time(blade_number)
+            self.set_blade_pitch_manoeuvre_end_time(blade_number, self.get_blade_pitch_manoeuvre_time(blade_number))
 
     @property
     def yaw_manoeuvre_rate(self):
@@ -129,7 +126,6 @@ class Fast7ServoInput(FastServoInput):
                 (self.final_yaw - initial_yaw) / self._yaw_manoeuvre_rate
         else:
             self['TYawManE'] = self['TYawManS']
-            self.final_yaw = initial_yaw
 
 
 class ServoDynInput(FastServoInput):
@@ -141,8 +137,13 @@ class ServoDynInput(FastServoInput):
 
     @pitch_manoeuvre_rate.setter
     def pitch_manoeuvre_rate(self, pitch_rate):
-        for bld_num in self._blade_range:
-            self.set_on_blade('PitManRat', bld_num, pitch_rate)
+        if pitch_rate != 0.0:
+            for bld_num in self._blade_range:
+                self.set_on_blade('PitManRat', bld_num, pitch_rate)
+        else:
+            # v8 does not allow zero pitch rate so set manoeuvre time to large instead
+            for bld_num in self._blade_range:
+                self.set_blade_pitch_manoeuvre_time(bld_num, 9999.9)
 
     @property
     def yaw_manoeuvre_rate(self):

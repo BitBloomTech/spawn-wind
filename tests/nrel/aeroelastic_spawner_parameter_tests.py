@@ -3,8 +3,8 @@
 # 
 # This program is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
-# the Free Software Foundation; either version 3 of the License, or
-# (at your option) any later version.
+# the Free Software Foundation; either fast_version 3 of the License, or
+# (at your option) any later fast_version.
 # 
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -40,49 +40,41 @@ def _create_spawner(tmpdir, turbsim_input_file, fast_input_file, fast_input_cls)
     spawner.simulation_time = 1.0
     return spawner
 
-@pytest.fixture(params=['v8'], scope='module')
-def version(request, exe_paths):
-    if request.param == 'v8':
-        luigi.configuration.get_config().set('FastSimulationTask', '_exe_path', exe_paths['fast_v8'])
-    elif request.param == 'v7':
-        luigi.configuration.get_config().set('FastSimulationTask', '_exe_path', exe_paths['fast_v7'])
-    return request.param
-
 @pytest.fixture(scope='function')
-def spawner(version, tmpdir, turbsim_input_file, fast_v7_input_file, fast_v8_input_file):
-    if version == 'v7':
-        return _create_spawner(tmpdir, turbsim_input_file, fast_v7_input_file, Fast7Input)
-    elif version == 'v8':
-        return _create_spawner(tmpdir, turbsim_input_file, fast_v8_input_file, Fast8Input)
+def spawner(fast_version, tmpdir, turbsim_input_file, fast_input_file):
+    if fast_version == 'v7':
+        return _create_spawner(tmpdir, turbsim_input_file, fast_input_file, Fast7Input)
+    elif fast_version == 'v8':
+        return _create_spawner(tmpdir, turbsim_input_file, fast_input_file, Fast8Input)
 
 
 @pytest.fixture(scope='module')
-def baseline(version, turbsim_input_file, fast_v7_input_file, fast_v8_input_file):
+def baseline(fast_version, turbsim_input_file, fast_input_file):
     with tempfile.TemporaryDirectory() as tmpdir:
-        if version == 'v7':
-            s = _create_spawner(tmpdir, turbsim_input_file, fast_v7_input_file, Fast7Input)
-        elif version == 'v8':
-            s = _create_spawner(tmpdir, turbsim_input_file, fast_v8_input_file, Fast8Input)
+        if fast_version == 'v7':
+            s = _create_spawner(tmpdir, turbsim_input_file, fast_input_file, Fast7Input)
+        elif fast_version == 'v8':
+            s = _create_spawner(tmpdir, turbsim_input_file, fast_input_file, Fast8Input)
         return run_and_get_results(s, tmpdir)
 
 @pytest.fixture(scope='module')
-def turbulent_baseline(version, turbsim_input_file, fast_v7_input_file, fast_v8_input_file):
+def turbulent_baseline(fast_version, turbsim_input_file, fast_input_file):
     with tempfile.TemporaryDirectory() as tmpdir:
-        if version == 'v7':
-            s = _create_spawner(tmpdir, turbsim_input_file, fast_v7_input_file, Fast7Input)
-        elif version == 'v8':
-            s = _create_spawner(tmpdir, turbsim_input_file, fast_v8_input_file, Fast8Input)
+        if fast_version == 'v7':
+            s = _create_spawner(tmpdir, turbsim_input_file, fast_input_file, Fast7Input)
+        elif fast_version == 'v8':
+            s = _create_spawner(tmpdir, turbsim_input_file, fast_input_file, Fast8Input)
         s.wind_type = 'bladed'
         return run_and_get_results(s, tmpdir)
 
 @pytest.fixture
-def wind_keys(version):
-    if version == 'v7':
+def wind_keys(fast_version):
+    if fast_version == 'v7':
         return {
             'longitudinal': 'WindVxi',
             'vertical': 'WindVzi'
         }
-    elif version == 'v8':
+    elif fast_version == 'v8':
         return {
             'longitudinal': 'Wind1VelX',
             'vertical': 'Wind1VelZ'
@@ -151,12 +143,12 @@ def test_set_and_then_get_indexed_parameters(spawner, key, index, value):
 
 @pytest.mark.skipif('sys.platform != "win32"')
 def test_operating_mode(spawner, tmpdir):
-    spawner.operation_mode = 'idling'
     spawner.initial_pitch = 30.0
+    spawner.operation_mode = 'idling'
     res = run_and_get_results(spawner, path.join(tmpdir, 'a'))
     assert np.all(res['BldPitch1'] == 30.0)
     assert np.all(res['GenPwr'] <= 0.0)
-    assert np.all(res['RotSpeed'] != 0.0)
+    assert np.all(res['RotSpeed'][1:] != 0.0)
     assert np.all(abs(res['RotSpeed']) < 1.0)
     spawner.operation_mode = 'parked'
     spawner.initial_pitch = 90.0
@@ -169,7 +161,7 @@ def test_operating_mode(spawner, tmpdir):
     res3 = run_and_get_results(spawner, path.join(tmpdir, 'c'))
     assert np.all(res3['BldPitch1'] <= 10.0)
     assert np.all(res3['GenPwr'] >= 0.0)
-    assert np.all(res3['RotSpeed'] > 0.0)
+    assert np.all(res3['RotSpeed'][1:] > 0.0)  # initial rotor speed = 0, so ignore first time step
 
 
 @pytest.mark.skipif('sys.platform != "win32"')

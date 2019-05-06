@@ -46,7 +46,7 @@ class FastSimulationSpawner(AeroelasticSimulationSpawner):
         # non-arguments:
         self._wind_input = fast_input.get_wind_input(wind_spawner)
         self._elastodyn_input = self._input.get_elastodyn_input()
-        self._blade_range = list(range(1, self.get_number_of_blades()))
+        self._blade_range = list(range(1, self.get_number_of_blades()+1))
         self._servodyn_input = self._input.get_servodyn_input(self._blade_range)
         # intermediate parameters
         self._pitch_manoeuvre_rate = None
@@ -192,7 +192,10 @@ class FastSimulationSpawner(AeroelasticSimulationSpawner):
         else:
             self._elastodyn_input['GenDOF'] = False
         if mode in ['idling', 'parked']:
+            self._servodyn_input['TPCOn'] = large_time  # fix pitch by turning pitch control off
             self.initial_rotor_speed = 0.0
+        else:
+            self._servodyn_input['TPCOn'] = 0.0
 
     # pylint: disable=missing-docstring
     def get_pitch_manoeuvre_time(self):
@@ -352,6 +355,7 @@ class FastSimulationSpawner(AeroelasticSimulationSpawner):
             self.initial_pitch = pitch_angle
         self._servodyn_input.pitch_manoeuvre_rate = 0.0
         for bld_num in self._blade_range:
+            self._servodyn_input.set_blade_final_pitch(bld_num, self.get_blade_initial_pitch(bld_num))
             self._servodyn_input.reconcile_pitch_manoeuvre(bld_num, self.get_blade_initial_pitch(bld_num))
 
     def _free_pitch(self):

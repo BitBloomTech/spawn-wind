@@ -21,16 +21,11 @@ from spawn.config.command_line import CommandLineConfiguration
 from spawn.schedulers.luigi import LuigiScheduler
 from spawn.parsers import SpecificationParser, DictSpecificationProvider
 
-from spawnwind.nrel import TurbsimSpawner, FastSimulationSpawner, FastInput, TurbsimInput, WindGenerationTask
+from spawnwind.nrel import TurbsimSpawner, FastSimulationSpawner, TurbsimInput, WindGenerationTask
 
 @pytest.fixture(scope='function')
 def turbsim_input(examples_folder):
     return TurbsimInput.from_file(path.join(examples_folder, 'TurbSim.inp'))
-
-
-@pytest.fixture(scope='function')
-def fast_input(examples_folder):
-    return FastInput.from_file(path.join(examples_folder, 'NRELOffshrBsline5MW_Onshore.fst'))
 
 
 @pytest.mark.skipif('sys.platform != "win32"')
@@ -47,6 +42,7 @@ def test_can_spawn_turbsim_task(turbsim_input):
 def test_spawns_tests_requiring_wind_generation_when_wind_changed(turbsim_input, fast_input):
     temp_dir = tempfile.TemporaryDirectory()
     spawner = FastSimulationSpawner(fast_input, TurbsimSpawner(turbsim_input), temp_dir.name)
+    spawner.wind_type = 'bladed'  # ensure need to generate wind file
     task = spawner.spawn(path.join(temp_dir.name, 'a'), {})
     s2 = spawner.branch()
     s2.wind_speed = 8.0
@@ -62,6 +58,7 @@ def test_spawn_with_additional_directory_puts_tasks_in_new_folders(turbsim_input
     runs_dir_1 = path.join(tmpdir, 'runs', '1')
     runs_dir_2 = path.join(tmpdir, 'runs', '2')
     spawner = FastSimulationSpawner(fast_input, TurbsimSpawner(turbsim_input), tmpdir)
+    spawner.wind_type = 'bladed'  # ensure need to generate wind file
     spawner.wind_speed = 6.0
     task1 = spawner.spawn(runs_dir_1, {})
     spawner.wind_speed = 8.0

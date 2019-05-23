@@ -27,29 +27,36 @@ from spawnwind.nrel import TurbsimInput, Fast7Input, Fast8Input, TurbsimSpawner,
 
 __home_dir = path.dirname(path.realpath(__file__))
 _example_data_folder = path.join(__home_dir, pardir, 'example_data')
+_fast_exe_paths = {
+    'v7': path.join(_example_data_folder, 'bin', 'FASTv7.0.2.exe'),
+    'v8': path.join(_example_data_folder, 'bin', 'FASTv8.16_Win32.exe')
+}
 
 @pytest.fixture(scope='session')
-def exe_paths():
-    return {
-        'turbsim': path.join(_example_data_folder, 'TurbSim.exe'),
-        'fast_v7': path.join(_example_data_folder, 'FASTv7.0.2.exe'),
-        'fast_v8': path.join(_example_data_folder, 'FASTv8.16_Win32.exe')
-    }
+def turbsim_exe():
+    return path.join(_example_data_folder, 'bin', 'TurbSim.exe')
 
 @pytest.fixture(scope='session', autouse=True)
-def configure_luigi(exe_paths):
+def configure_luigi(turbsim_exe):
     luigi.configuration.get_config().set('WindGenerationTask', '_runner_type', 'process')
-    luigi.configuration.get_config().set('WindGenerationTask', '_exe_path', exe_paths['turbsim'])
+    luigi.configuration.get_config().set('WindGenerationTask', '_exe_path', turbsim_exe)
     luigi.configuration.get_config().set('FastSimulationTask', '_runner_type', 'process')
-    luigi.configuration.get_config().set('FastSimulationTask', '_exe_path', exe_paths['fast_v8'])
 
 @pytest.fixture(params=['v7', 'v8'], scope='module')
-def fast_version(request, exe_paths):
-    if request.param == 'v8':
-        luigi.configuration.get_config().set('FastSimulationTask', '_exe_path', exe_paths['fast_v8'])
-    elif request.param == 'v7':
-        luigi.configuration.get_config().set('FastSimulationTask', '_exe_path', exe_paths['fast_v7'])
+def fast_version(request):
+    luigi.configuration.get_config().set('FastSimulationTask', '_exe_path', _fast_exe_paths[request.param])
     return request.param
+
+@pytest.fixture(scope='module')
+def exe_paths(turbsim_exe, fast_version):
+    return {
+        'turbsim': turbsim_exe,
+        'fast': _fast_exe_paths[fast_version]
+    }
+
+@pytest.fixture()
+def fast_exe(exe_paths):
+    return exe_paths['fast']
 
 @pytest.fixture(scope='module')
 def turbsim_input_file():
@@ -60,11 +67,19 @@ def inflowwind_input_file():
     return path.join(_example_data_folder, 'fast_input_files', 'v8', 'InflowWind.inp')
 
 @pytest.fixture(scope='module')
-def fast_input_file(fast_version):
+def base_fast_input_folder():
+    return path.join(_example_data_folder, 'fast_input_files')
+
+@pytest.fixture(scope='module')
+def fast_input_folder(fast_version):
+    return path.join(_example_data_folder, 'fast_input_files', fast_version)
+
+@pytest.fixture(scope='module')
+def fast_input_file(fast_version, fast_input_folder):
     if fast_version == 'v7':
-        return path.join(_example_data_folder, 'fast_input_files', 'NRELOffshrBsline5MW_Onshore.fst')
+        return path.join(fast_input_folder, 'NRELOffshrBsline5MW_Onshore.fst')
     elif fast_version == 'v8':
-        return path.join(_example_data_folder, 'fast_input_files', 'v8', 'NREL5MW.fst')
+        return path.join(fast_input_folder, 'NREL5MW.fst')
 
 @pytest.fixture(scope='function')
 def fast_input(fast_version, fast_input_file):
@@ -78,10 +93,6 @@ def example_data_folder():
     return _example_data_folder
 
 @pytest.fixture
-def examples_folder(example_data_folder):
-    return path.join(example_data_folder, 'fast_input_files')
-
-@pytest.fixture
 def wind_gen_spawner(turbsim_input_file):
     return TurbsimSpawner(TurbsimInput.from_file(turbsim_input_file))
 
@@ -90,14 +101,15 @@ def spawner(wind_gen_spawner, fast_v7_input_file, tmpdir):
     return FastSimulationSpawner(Fast7Input.from_file(fast_v7_input_file), wind_gen_spawner, tmpdir)
 
 @pytest.fixture
-def plugin_loader(tmpdir, exe_paths):
+def plugin_loader(tmpdir, fast_version, fast_input_file, exe_paths, turbsim_input_file):
     default_config = DefaultConfiguration()
     command_line_configuration = CommandLineConfiguration(
-        turbsim_exe=exe_paths['turbsim'], fast_exe=exe_paths['fast_v7'],
-        turbsim_base_file=path.join(_example_data_folder, 'fast_input_files', 'TurbSim.inp'),
-        fast_base_file=path.join(_example_data_folder, 'fast_input_files', 'NRELOffshrBsline5MW_Onshore.fst'),
-        turbsim_working_dir=_example_data_folder,
-        fast_working_dir=_example_data_folder,
+        turbsim_exe=exe_paths['turbsim'], fast_exe=exe_paths['fast'],
+        turbsim_base_file=turbsim_input_file,
+        fast_base_file=fast_input_file,
+        fast_version=fast_version,
+        turbsim_working_dir=path.join(_example_data_folder, 'bin'),
+        fast_working_dir=path.join(_example_data_folder, 'bin'),
         outdir=str(tmpdir)
     )
     return PluginLoader(CompositeConfiguration(command_line_configuration, default_config))

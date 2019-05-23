@@ -19,56 +19,78 @@ import pytest
 import tempfile
 
 from spawnwind.nrel.nrel_input_line import NrelInputLine
-from spawnwind.nrel import TurbsimInput, AerodynInput, FastInput, NRELSimulationInput
+from spawnwind.nrel import TurbsimInput, AerodynInput, NRELSimulationInput, Fast7Input, Fast8Input, TurbsimSpawner
 
 
-@pytest.mark.parametrize('cls,file,key', [
-    (TurbsimInput, 'TurbSim.inp', 'CTStartTime'),
-    (AerodynInput, 'NRELOffshrBsline5MW_AeroDyn.ipt', 'BldNodes'),
-    (FastInput, 'NRELOffshrBsline5MW_Onshore.fst', 'NBlGages')
+@pytest.fixture(scope='function')
+def turbsim_input(turbsim_input_file):
+    return TurbsimInput.from_file(turbsim_input_file)
+
+@pytest.fixture(scope='function')
+def aerodyn_input(turbsim_input_file, base_fast_input_folder):
+    input_file = path.join(base_fast_input_folder, 'v7', 'NRELOffshrBsline5MW_AeroDyn.ipt')
+    return AerodynInput.from_file(input_file, TurbsimSpawner(TurbsimInput.from_file(turbsim_input_file)))
+
+@pytest.fixture(scope='function')
+def fast7_input(base_fast_input_folder):
+    input_file = path.join(base_fast_input_folder, 'v7', 'NRELOffshrBsline5MW_Onshore.fst')
+    return Fast7Input.from_file(input_file)
+
+@pytest.fixture(scope='function')
+def fast8_input(base_fast_input_folder):
+    input_file = path.join(base_fast_input_folder, 'v8', 'NREL5MW.fst')
+    return Fast8Input.from_file(input_file)
+
+
+@pytest.mark.parametrize('input_fixture,key', [
+    ('turbsim_input', 'CTStartTime'),
+    ('fast7_input', 'NBlGages'),
+    ('fast8_input', 'TMax')
 ])
-def test_read_write_round_trip(examples_folder, cls, file, key):
-    _input = cls.from_file(path.join(examples_folder, file))
+def test_read_write_round_trip(input_fixture, key, request):
+    _input = request.getfixturevalue(input_fixture)
     with tempfile.TemporaryDirectory() as outfile:
         name = path.join(outfile, 'temp.txt')
         _input.to_file(name)
-        _input2 = cls.from_file(name)
+        _input2 = _input.__class__.from_file(name)
     assert _input[key] == _input2[key]
 
 
-@pytest.mark.parametrize('cls,file,key,value', [
-    (TurbsimInput, 'TurbSim.inp', 'URef', 11.0),
-    (AerodynInput, 'NRELOffshrBsline5MW_AeroDyn.ipt', 'WindFile', 'Other.wnd'),
-    (FastInput, 'NRELOffshrBsline5MW_Onshore.fst', 'TMax', 300.0)
+@pytest.mark.parametrize('input_fixture,key,value', [
+    ('turbsim_input', 'URef', 11.0),
+    ('fast7_input', 'TMax', 300.0),
+    ('fast8_input', 'DT', 0.001)
 ])
-def test_writes_edited_Specification(examples_folder, cls, file, key, value):
-    _input = cls.from_file(path.join(examples_folder, file))
+def test_writes_edited_Specification(input_fixture, key, value, request):
+    _input = request.getfixturevalue(input_fixture)
     _input[key] = value
     with tempfile.TemporaryDirectory() as outfile:
         name = path.join(outfile, 'temp.txt')
         _input.to_file(name)
-        _input2 = cls.from_file(name)
+        _input2 = _input.__class__.from_file(name)
     assert _input2[key] == str(value)
 
 
-@pytest.mark.parametrize('cls,file,keys', [
-    (AerodynInput, 'NRELOffshrBsline5MW_AeroDyn.ipt', ['FoilNm']),
-    (FastInput, 'NRELOffshrBsline5MW_Onshore.fst', ['BldFile(1)', 'BldFile(3)', 'TwrFile'])
+@pytest.mark.parametrize('input_fixture,keys', [
+    ('aerodyn_input', ['FoilNm']),
+    ('fast7_input', ['BldFile(1)', 'BldFile(3)', 'TwrFile']),
+    ('fast8_input', ['EDFile', 'InflowFile', 'ServoFile', 'AeroFile'])
 ])
-def test_paths_are_absolute(examples_folder, cls, file, keys):
-    _input = cls.from_file(path.join(examples_folder, file))
+def test_paths_are_absolute(input_fixture, keys, request):
+    _input = request.getfixturevalue(input_fixture)
     for k in keys:
         f = _input[k]
         #sanitise windows paths
         assert path.isfile(path.sep.join(f.split('\\')))
 
 
-@pytest.mark.parametrize('cls,file,key', [
-    (AerodynInput, 'NRELOffshrBsline5MW_AeroDyn.ipt', 'WindFile'),
-    (FastInput, 'NRELOffshrBsline5MW_Onshore.fst', 'TwrFile')
+@pytest.mark.parametrize('input_fixture,key', [
+    ('aerodyn_input', 'WindFile'),
+    ('fast7_input', 'TwrFile'),
+    ('fast8_input', 'EDFile')
 ])
-def test_can_handle_spaces_in_paths(examples_folder, cls, file, key):
-    _input = cls.from_file(path.join(examples_folder, file))
+def test_can_handle_spaces_in_paths(input_fixture, key, request):
+    _input = request.getfixturevalue(input_fixture)
     spacey_path = '"C:/this is a spacey/path.ipt"'
     _input[key] = spacey_path
     assert spacey_path.strip('"') == _input[key].strip('"')

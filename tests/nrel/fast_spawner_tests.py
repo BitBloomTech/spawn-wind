@@ -24,8 +24,8 @@ from spawn.parsers import SpecificationParser, DictSpecificationProvider
 from spawnwind.nrel import TurbsimSpawner, FastSimulationSpawner, TurbsimInput, WindGenerationTask
 
 @pytest.fixture(scope='function')
-def turbsim_input(examples_folder):
-    return TurbsimInput.from_file(path.join(examples_folder, 'TurbSim.inp'))
+def turbsim_input(turbsim_input_file):
+    return TurbsimInput.from_file(turbsim_input_file)
 
 
 @pytest.mark.skipif('sys.platform != "win32"')

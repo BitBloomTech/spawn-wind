@@ -41,14 +41,14 @@ class FastInput(NRELSimulationInput):
     def get_wind_input(self, wind_gen_spawner):
         """
         :param wind_gen_spawner: Spawner of wind generation tasks
-        :return: `WindInput` instance for managing the contents of the input file for wind inflow
+        :return: :class:`WindInput` instance for managing the contents of the input file for wind inflow
         """
         raise NotImplementedError()
 
     def get_servodyn_input(self, blade_range):
         """
         :param blade_range: iterable containing the numbers of the blades (e.g. [1, 2, 3])
-        :return: A `FastServoInput` instance for managing control and manoeuvre inputs
+        :return: A :class:`FastServoInput` instance for managing control and manoeuvre inputs
         """
         raise NotImplementedError()
 

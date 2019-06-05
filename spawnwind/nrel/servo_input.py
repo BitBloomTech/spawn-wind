@@ -32,10 +32,10 @@ class FastServoInput(NRELSimulationInput):
     @classmethod
     def from_nrel_input(cls, nrel_input, blade_range):
         """
-        Crate from `NRELSimulationInput` instance
-        :param nrel_input: `NRELSimulationInput` instance
+        Create from :class:`NRELSimulationInput` instance
+        :param nrel_input: :class:`NRELSimulationInput` instance
         :param blade_range:
-        :return: `FastServoInput` instance
+        :return: :class:`FastServoInput` instance
         """
         if not isinstance(nrel_input, NRELSimulationInput):
             raise TypeError("'nrel_input' not of type 'NRELSimulationInput'")

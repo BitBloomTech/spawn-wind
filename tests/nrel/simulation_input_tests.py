@@ -20,6 +20,8 @@ import tempfile
 
 from spawnwind.nrel.nrel_input_line import NrelInputLine
 from spawnwind.nrel import TurbsimInput, AerodynInput, NRELSimulationInput, Fast7Input, Fast8Input, TurbsimSpawner
+from spawnwind.nrel.fast_input import ElastoDynInput
+from spawnwind.nrel.servo_input import ServoDynInput
 
 
 @pytest.fixture(scope='function')
@@ -30,6 +32,16 @@ def turbsim_input(turbsim_input_file):
 def aerodyn_input(turbsim_input_file, base_fast_input_folder):
     input_file = path.join(base_fast_input_folder, 'v7', 'NRELOffshrBsline5MW_AeroDyn.ipt')
     return AerodynInput.from_file(input_file, TurbsimSpawner(TurbsimInput.from_file(turbsim_input_file)))
+
+@pytest.fixture(scope='function')
+def elastodyn_input(base_fast_input_folder):
+    input_file = path.join(base_fast_input_folder, 'v8', 'NRELOffshrBsline5MW_Onshore_ElastoDyn.dat')
+    return ElastoDynInput.from_file(input_file)
+
+@pytest.fixture(scope='function')
+def servodyn_input(base_fast_input_folder):
+    input_file = path.join(base_fast_input_folder, 'v8', 'NRELOffshrBsline5MW_Onshore_ServoDyn.dat')
+    return ServoDynInput.from_nrel_input(NRELSimulationInput.from_file(input_file), [1, 2, 3])
 
 @pytest.fixture(scope='function')
 def fast7_input(base_fast_input_folder):
@@ -74,7 +86,9 @@ def test_writes_edited_Specification(input_fixture, key, value, request):
 @pytest.mark.parametrize('input_fixture,keys', [
     ('aerodyn_input', ['FoilNm']),
     ('fast7_input', ['BldFile(1)', 'BldFile(3)', 'TwrFile']),
-    ('fast8_input', ['EDFile', 'InflowFile', 'ServoFile', 'AeroFile'])
+    ('fast8_input', ['EDFile', 'InflowFile', 'ServoFile', 'AeroFile']),
+    ('servodyn_input', ['DLL_FileName']),
+    ('elastodyn_input', ['BldFile(1)', 'BldFile(3)', 'TwrFile'])
 ])
 def test_paths_are_absolute(input_fixture, keys, request):
     _input = request.getfixturevalue(input_fixture)

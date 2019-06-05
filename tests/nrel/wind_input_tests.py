@@ -53,6 +53,7 @@ def test_produces_right_tasks(inflow_wind_input, tmpdir):
     assert path.splitext(tasks[0].wind_file_path)[1] == '.wnd'
 
 
+@pytest.mark.skipif('sys.platform != "win32"')
 @pytest.mark.parametrize('wind_type', [
     'bladed',
     'turbsim'

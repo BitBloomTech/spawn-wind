@@ -20,8 +20,6 @@ import os
 from os import path
 import copy
 
-from spawn.util import quote
-
 from ..spawners import AeroelasticSimulationSpawner
 from .tasks import FastSimulationTask
 
@@ -52,6 +50,7 @@ class FastSimulationSpawner(AeroelasticSimulationSpawner):
         self._pitch_manoeuvre_rate = None
         self._yaw_manoeuvre_rate = None
 
+    # pylint: disable=arguments-differ
     def spawn(self, path_, metadata):
         """Spawn a simulation task
 

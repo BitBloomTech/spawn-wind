@@ -23,9 +23,10 @@ import luigi
 from spawn.tasks import SimulationTask
 
 class WindGenerationTask(SimulationTask):
-    _extension = luigi.Parameter(default='.wnd')
-    """Implementation of :class:`SimulationTask` for TurbSim
     """
+    Implementation of :class:`SimulationTask` for TurbSim
+    """
+    _extension = luigi.Parameter(default='.wnd')
     def output(self):
         """The output of this task
 
@@ -42,7 +43,8 @@ class WindGenerationTask(SimulationTask):
 
 
 class FastSimulationTask(SimulationTask):
-    """Implementation of :class:`SimulationTask` for FAST
+    """
+    Implementation of :class:`SimulationTask` for FAST
     """
     def output(self):
         """The output of this task

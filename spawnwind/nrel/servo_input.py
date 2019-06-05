@@ -1,7 +1,13 @@
+"""
+Handlers of input files relating to control and manoeuvre information
+"""
 from .simulation_input import NRELSimulationInput
 
 
 class FastServoInput(NRELSimulationInput):
+    """
+    Base class for managing inputs relating to control and manoeuvres
+    """
 
     def __init__(self, blade_range, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -9,19 +15,39 @@ class FastServoInput(NRELSimulationInput):
 
     @classmethod
     def from_nrel_input(cls, nrel_input, blade_range):
+        """
+        Crate from `NRELSimulationInput` instance
+        :param nrel_input: `NRELSimulationInput` instance
+        :param blade_range:
+        :return: `FastServoInput` instance
+        """
         if not isinstance(nrel_input, NRELSimulationInput):
             raise TypeError("'nrel_input' not of type 'NRELSimulationInput'")
+        # pylint: disable=protected-access
         return cls(blade_range, nrel_input._input_lines, nrel_input._root_folder)
 
     # Pitch
     def get_blade_pitch_manoeuvre_time(self, blade_number):
+        """
+        :param blade_number: Integer blade number
+        :return: Time in seconds at which blade starts pitching in pitch manoeuvre
+        """
         return float(self.get_on_blade('TPitManS', blade_number))
 
     def set_blade_pitch_manoeuvre_time(self, blade_number, time):
+        """
+        :param blade_number: Integer blade number
+        :param time: Time in seconds at which blade starts pitching in pitch manoeuvre
+        """
         self.set_on_blade('TPitManS', blade_number, time)
 
     @property
     def final_pitch(self):
+        """
+        This function is not implemented because it is not possible to determine a single scalar value
+        :return: Final pitch angle of manoeuvre in degrees
+        """
+        # pylint: disable=abstract-method
         raise NotImplementedError('Incapable of determining final pitch angle for all blades at once')
 
     @final_pitch.setter
@@ -30,13 +56,24 @@ class FastServoInput(NRELSimulationInput):
             self.set_blade_final_pitch(bld_num, angle)
 
     def get_blade_final_pitch(self, blade_number):
+        """
+        :param blade_number: Integer blade number
+        :return: Final pitch angle of manoeuvre in degrees
+        """
         return float(self.get_on_blade('BlPitchF', blade_number))
 
     def set_blade_final_pitch(self, blade_number, angle):
+        """
+        :param blade_number: Integer blade number
+        :param angle: Final pitch angle of manoeuvre in degrees
+        """
         self.set_on_blade('BlPitchF', blade_number, angle)
 
     @property
     def pitch_control_start_time(self):
+        """
+        :return: Time in seconds at which pitch control is activated
+        """
         return float(self['TPCOn'])
 
     @pitch_control_start_time.setter
@@ -45,6 +82,9 @@ class FastServoInput(NRELSimulationInput):
 
     @property
     def pitch_manoeuvre_rate(self):
+        """
+        :return: Rate in degrees per second at which blade pitches during pitch manoeuvres
+        """
         raise NotImplementedError()
 
     @pitch_manoeuvre_rate.setter
@@ -52,17 +92,33 @@ class FastServoInput(NRELSimulationInput):
         raise NotImplementedError()
 
     def get_blade_pitch_manoeuvre_end_time(self, blade_number):
+        """
+        :param blade_number: Integer blade number
+        :return: Time in seconds at which blade stops pitching in pitch manoeuvre
+        """
         return float(self.get_on_blade('TPitManE', blade_number))
 
     def set_blade_pitch_manoeuvre_end_time(self, blade_number, time):
+        """
+        :param blade_number: Integer blade number
+        :param time: Time in seconds at which blade stops pitching in pitch manoeuvre
+        """
         self.set_on_blade('TPitManE', blade_number, time)
 
     def reconcile_pitch_manoeuvre(self, blade_number, initial_pitch):
-        pass
+        """
+        Reconcile pitch manoeuvres by matching manoeuvre start and end times, start and end pitch angles and manoeuvre
+        rate
+        :param blade_number: Blade number on which to reconcile
+        :param initial_pitch: Initial pitch angle in degrees (external parameter)
+        """
 
     # Yaw
     @property
     def yaw_manoeuvre_time(self):
+        """
+        :return: Time in seconds at which yaw manoeuvre starts
+        """
         return float(self['TYawManS'])
 
     @yaw_manoeuvre_time.setter
@@ -72,6 +128,9 @@ class FastServoInput(NRELSimulationInput):
 
     @property
     def final_yaw(self):
+        """
+        :return: Final yaw angle of manoeuvre in degrees
+        """
         return float(self['NacYawF'])
 
     @final_yaw.setter
@@ -80,6 +139,9 @@ class FastServoInput(NRELSimulationInput):
 
     @property
     def yaw_manoeuvre_rate(self):
+        """
+        :return: Rate at which turbine yaws in degrees per second during yaw manoeuvre
+        """
         raise NotImplementedError()
 
     @yaw_manoeuvre_rate.setter
@@ -87,10 +149,17 @@ class FastServoInput(NRELSimulationInput):
         raise NotImplementedError()
 
     def reconcile_yaw_manoeuvre(self, initial_yaw):
-        pass
+        """
+        Reconcile yaw manoeuvres by matching manoeuvre start and end times, start and end yaw angles and manoeuvre rate
+        :param initial_yaw: Initial yaw angle in degrees (external parameter)
+        """
 
 
+# pylint: disable=abstract-method
 class Fast7ServoInput(FastServoInput):
+    """
+    Handles control and manoeuvres via the main FAST input file (FAST v7)
+    """
     def __init__(self, *args):
         super().__init__(*args)
         self._pitch_manoeuvre_rate = None
@@ -128,7 +197,11 @@ class Fast7ServoInput(FastServoInput):
             self['TYawManE'] = self['TYawManS']
 
 
+# pylint: disable=abstract-method
 class ServoDynInput(FastServoInput):
+    """
+    Handles control and manoeuvres via the ServoDyn input file (FAST v8)
+    """
     key = 'ServoFile'
 
     @property

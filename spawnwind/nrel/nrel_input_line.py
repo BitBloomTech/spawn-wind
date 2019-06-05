@@ -1,10 +1,20 @@
+"""
+Handling of individual lines in NREL style input files
+"""
 import re
 
 
 class NrelInputLine:
+    """
+    Handles a single line of an NREL-style input file, each of which has a value, followed by a key. A key is a
+    contiguous alphanumeric string and the value precedes it. Any text after a hyphen (-) is a comment, unless it's the
+    first non-whitespace character (negative values) or part of a quoted string
+    """
+
     def __init__(self, line_str):
         self._line_str = line_str.lstrip()
-        if self._line_str and not (self._line_str.startswith('- ') or self._line_str.startswith('--') or self._line_str[0] == '='):
+        if self._line_str and \
+                not (self._line_str.startswith('- ') or self._line_str.startswith('--') or self._line_str[0] == '='):
             self._value_begin, self._value_end = self._find_value_indices(self._line_str)
             self._key_begin, self._key_end = self._find_key_indices(self._line_str, self._value_end)
         else:
@@ -13,15 +23,26 @@ class NrelInputLine:
 
     @staticmethod
     def _find_value_indices(line_str):
+        """
+        Find the indices identifying where the value lies in the input line string
+        :param line_str: The input line string
+        :return: Interval [start, end) as tuple identifying start and end of value string
+        """
         match = re.search('^".*?"', line_str)
         if match:
             return match.start() + 1, match.end() - 1
         else:
-            match = re.search('[^\s]+', line_str)
+            match = re.search(r'[^\s]+', line_str)
             return match.start(), match.end()
 
     @staticmethod
     def _find_key_indices(line_str, start):
+        """
+        Find the indices identifying where the key lies in the input line string
+        :param line_str: The input line string
+        :param start: Index of where to start looking for the key in the input line string
+        :return: Interval [start, end) as tuple identifying start and end of key string
+        """
         match = re.search('[a-zA-Z0-9_()]+', line_str[start:])
         if match is None:
             return None, None
@@ -29,6 +50,9 @@ class NrelInputLine:
 
     @property
     def key(self):
+        """
+        :return:  The line's key
+        """
         if self._key_begin is not None:
             return self._line_str[self._key_begin:self._key_end]
         else:
@@ -36,6 +60,9 @@ class NrelInputLine:
 
     @property
     def value(self):
+        """
+        :return: The line's value
+        """
         if self._value_begin is not None:
             return self._line_str[self._value_begin:self._value_end]
         else:

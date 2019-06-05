@@ -44,6 +44,7 @@ class NRELSimulationInput(SimulationInput):
         self._root_folder = root_folder
         self._absolutise_paths(root_folder, self._lines_with_paths())
 
+    # pylint: disable=arguments-differ
     @classmethod
     def from_file(cls, file_path, **kwargs):
         """Creates a :class:`NRELSimulationInput` by loading a file
@@ -81,10 +82,22 @@ class NRELSimulationInput(SimulationInput):
         return string_hash('\n'.join(keys + values))
 
     def get_on_blade(self, base_key, blade_number):
+        """
+        Get property for a particular blade
+        :param base_key: Key excluding the blade number identifier
+        :param blade_number: Blade number as an integer
+        :return: Value of property
+        """
         key = base_key + '({})'.format(blade_number)
         return self[key]
 
     def set_on_blade(self, base_key, blade_number, value):
+        """
+        Set property on a particular blade
+        :param base_key: Key excluding the blade number identifier
+        :param blade_number: Blade number as an integer
+        :param value: Value to set
+        """
         key = base_key + '({})'.format(blade_number)
         self[key] = value
 
@@ -94,13 +107,19 @@ class NRELSimulationInput(SimulationInput):
     def __getitem__(self, key):
         return self._get_line(key).value.strip('"')
 
-    def _get_line(self, key, n=1):
+    def _get_line(self, key, nth_line=1):
+        """
+        Get input line based on key
+        :param key: Identifying key of input line
+        :param nth_line: If key is duplicated in input, return the line corresponding to the 'nth" occurrence of the key
+        :return: Line from self._input_lines container
+        """
         generate = (line for line in self._input_lines if line.key == key)
         try:
-            if n == 1:
+            if nth_line == 1:
                 return next(generate)
             else:
-                for _ in range(n):
+                for _ in range(nth_line):
                     line = next(generate)
                 return line
         except StopIteration:
@@ -131,5 +150,6 @@ class NRELSimulationInput(SimulationInput):
 
 
 class TurbsimInput(NRELSimulationInput):
-    """Handles contents of TurbSim (FAST wind generation) input file"""
-
+    """
+    Handles contents of TurbSim (FAST wind generation) input file
+    """

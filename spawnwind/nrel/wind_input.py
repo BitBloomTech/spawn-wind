@@ -1,9 +1,16 @@
+"""
+Handlers of input files relating to wind inflow
+"""
 from os import path
 from .nrel_input_line import NrelInputLine
 from .simulation_input import NRELSimulationInput
 
 
 class WindInput(NRELSimulationInput):
+    """
+    Base class for NREL input file determining the wind conditions for a FAST simulation. In FAST v7, this is an Aerodyn
+     input file and in v8 it is the InflowWind input file
+    """
 
     def __init__(self, lines, root_folder, wind_gen_spawner):
         super().__init__(lines, root_folder)
@@ -12,43 +19,69 @@ class WindInput(NRELSimulationInput):
         self._wind_is_explicit = False
 
     @classmethod
+    # pylint: disable=arguments-differ
     def from_file(cls, file_path, wind_gen_spawner):
         with open(file_path, 'r') as fp:
             input_lines = fp.readlines()
         root_folder = path.abspath(path.split(file_path)[0])
         return cls([NrelInputLine(line) for line in input_lines], root_folder, wind_gen_spawner)
 
-    @property
-    def key(self):
-        """Key im primary FAST input file"""
+    def get_wind_gen_tasks(self, prereq_dir, metadata):
+        """
+        Create wind generation tasks to create new wind find if necessary
+        :param prereq_dir: Output directory for prerequisite simulations
+        :param metadata: Metadata for wind generation task
+        :return: list of wind generation tasks (size 0 or 1)
+        """
         raise NotImplementedError()
 
     @property
     def wind_type(self):
+        """
+        :return: Type of wind as a lowercase string (.e.g. 'bladed', 'turbsim', 'steady')
+        """
         raise NotImplementedError()
 
     @wind_type.setter
     def wind_type(self, type_):
+        """
+        :param type_: Lowercase string representing wind type (.e.g 'bladed' or 'turbsim')
+        """
         raise NotImplementedError()
 
     @property
     def wind_speed(self):
+        """
+        :return: Reference wind speed in m/s
+        """
         return self._wind_gen_spawner.wind_speed
 
     @wind_speed.setter
     def wind_speed(self, speed):
+        """
+        :param speed: Reference wind speed in m/s
+        """
         self._wind_gen_spawner.wind_speed = speed
 
     @property
     def turbulence_intensity(self):
+        """
+        :return: Turbulence intensity as a percentage
+        """
         return self._wind_gen_spawner.turbulence_intensity
 
     @turbulence_intensity.setter
     def turbulence_intensity(self, turbulence_intensity):
+        """
+        :param turbulence_intensity: Turbulence intensity as a percentage
+        """
         self._wind_gen_spawner.turbulence_intensity = turbulence_intensity
 
     @property
     def turbulence_seed(self):
+        """
+        :return: Integer turbulence seed for wind file generation
+        """
         return self._wind_gen_spawner.turbulence_seed
 
     @turbulence_seed.setter
@@ -57,6 +90,9 @@ class WindInput(NRELSimulationInput):
 
     @property
     def wind_shear(self):
+        """
+        :return: Wind shear exponent
+        """
         return self._wind_gen_spawner.wind_shear
 
     @wind_shear.setter
@@ -65,6 +101,9 @@ class WindInput(NRELSimulationInput):
 
     @property
     def upflow(self):
+        """
+        :return: Mean wind flow inclination in degrees upwards from the horizontal
+        """
         return self._wind_gen_spawner.upflow
 
     @upflow.setter
@@ -73,6 +112,9 @@ class WindInput(NRELSimulationInput):
 
     @property
     def wind_file(self):
+        """
+        :return: Path of wind file if set
+        """
         return self['WindFile']
 
     @wind_file.setter
@@ -80,7 +122,20 @@ class WindInput(NRELSimulationInput):
         self._set_wind_file(file)
         self._wind_is_explicit = True
 
+    def _set_wind_file(self, file):
+        """
+        :param file: path of wind file
+        :return: Set wind file path in input
+        """
+        raise NotImplementedError()
+
     def _spawn_wind_gen_task(self, prereq_dir, metadata):
+        """
+        Get wind task from hash if equivalent exists, otherwise spawn new wind generation task
+        :param prereq_dir: Output directory for prerequisite simulations
+        :param metadata: Metadata for siumulation
+        :return: WindGenerationTask
+        """
         wind_hash = self._wind_gen_spawner.input_hash()
         if wind_hash in self._wind_task_cache:
             wind_task = self._wind_task_cache[wind_hash]
@@ -143,6 +198,12 @@ class InflowWindInput(WindInput):
     }
 
     def get_wind_gen_tasks(self, prereq_dir, metadata):
+        """
+        Create wind generation tasks to create new wind find if necessary
+        :param prereq_dir: Output directory for prerequisite simulations
+        :param metadata: Metadata for wind generation task
+        :return: list of wind generation tasks (size 0 or 1)
+        """
         # Generate new wind file if needed
         if self.wind_type == 'steady' or self.wind_type == 'uniform' or self._wind_is_explicit:
             return []
@@ -204,5 +265,3 @@ class InflowWindInput(WindInput):
     def _set_wind_file(self, file):
         line = self._get_wind_file_line()
         line.value = path.splitext(file)[0] if line.key == 'FilenameRoot' else file
-
-

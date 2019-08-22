@@ -94,6 +94,7 @@ class FastSimulationSpawner(AeroelasticSimulationSpawner):
         # pylint: disable=protected-access
         branched_spawner._input = copy.deepcopy(self._input)
         branched_spawner._wind_spawner = self._wind_spawner.branch()
+        branched_spawner._wind_input.wind_gen_spawner = branched_spawner._wind_spawner
         return branched_spawner
 
     # Simulation options

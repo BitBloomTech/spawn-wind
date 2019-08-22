@@ -52,6 +52,14 @@ class WindInput(NRELSimulationInput):
         raise NotImplementedError()
 
     @property
+    def wind_gen_spawner(self):
+        return self._wind_gen_spawner
+
+    @wind_gen_spawner.setter
+    def wind_gen_spawner(self, spawner):
+        self._wind_gen_spawner = spawner
+
+    @property
     def wind_type(self):
         """
         :return: Type of wind as a lowercase string (.e.g. 'bladed', 'turbsim', 'steady')

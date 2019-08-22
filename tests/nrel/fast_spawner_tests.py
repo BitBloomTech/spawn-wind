@@ -90,3 +90,17 @@ def test_does_not_create_wind_task_when_wind_file_is_set(turbsim_input, fast_inp
     assert len(task.requires()) == 0
     task.run()
     assert task.complete()
+
+@pytest.mark.skipif('sys.platform != "win32"')
+def test_run_succeeds_with_large_output_start_time(turbsim_input, fast_input, tmpdir):
+    spawner = FastSimulationSpawner(fast_input, TurbsimSpawner(turbsim_input), tmpdir)
+    spawner.output_start_time = 60.0
+    spawner.simulation_time = 30.0  # total run time of 90s
+    spawner.wind_speed = 8.0
+    spawner.wind_type = 'bladed'
+    task = spawner.spawn(path.join(tmpdir, 'a'), {})
+    assert len(task.requires()) == 1
+    task.requires()[0].run()
+    task.run()
+    assert task.complete()
+

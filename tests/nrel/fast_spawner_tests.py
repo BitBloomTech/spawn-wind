@@ -106,3 +106,9 @@ def test_run_succeeds_with_large_output_start_time_with_branching(turbsim_input,
     task.run()
     assert task.complete()
 
+def test_properties_of_spawner_sub_modules_are_independent_on_branches(turbsim_input, fast_input, tmpdir):
+    spawner = FastSimulationSpawner(fast_input, TurbsimSpawner(turbsim_input), tmpdir)
+    branch = spawner.branch()
+    spawner.initial_rotor_speed = 8.0
+    branch.initial_rotor_speed = 9.0
+    assert spawner.initial_rotor_speed != branch.initial_rotor_speed

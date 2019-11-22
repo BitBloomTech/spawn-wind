@@ -90,7 +90,7 @@ class FastSimulationSpawner(AeroelasticSimulationSpawner):
         :returns: A copy of this spawner with all values equal
         :rtype: :class:`FastSimulationSpawner`
         """
-        branched_spawner = copy.copy(self)
+        branched_spawner = copy.deepcopy(self)
         # pylint: disable=protected-access
         branched_spawner._input = copy.deepcopy(self._input)
         branched_spawner._wind_spawner = self._wind_spawner.branch()

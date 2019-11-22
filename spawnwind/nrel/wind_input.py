@@ -29,6 +29,13 @@ class WindInput(NRELSimulationInput):
     """
 
     def __init__(self, lines, root_folder, wind_gen_spawner):
+        """
+        :param lines: Lines, each with a key and value, making up the wind input
+        :type lines: list of :class:`NrelInputLine`
+        :param root_folder: The root folder containing the input file
+        :param wind_gen_spawner: Spawner for wind generation tasks into which properties relating to wind generation are
+         set
+        """
         super().__init__(lines, root_folder)
         self._wind_gen_spawner = wind_gen_spawner
         self._wind_task_cache = {}
@@ -53,6 +60,9 @@ class WindInput(NRELSimulationInput):
 
     @property
     def wind_gen_spawner(self):
+        """
+        :return: underlying spawner for wind generation tasks
+        """
         return self._wind_gen_spawner
 
     @wind_gen_spawner.setter
@@ -295,7 +305,7 @@ class InflowWindInput(WindInput):
             except KeyError:
                 return self._get_line('FilenameRoot')
         else:
-            raise KeyError("Cannot find wind file in InflowWind, type_={}. " +
+            raise KeyError("Cannot find wind file in InflowWind, type_={}. "\
                            "Set 'wind_type' parameter to an appropriate value".format(type_))
 
     def _set_wind_file(self, file):

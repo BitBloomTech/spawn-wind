@@ -272,20 +272,32 @@ class InflowWindInput(WindInput):
         self._get_wind_file_line().value = file
 
     def _lines_with_paths(self):
-        keys = ['Filename', 'FilenameRoot', 'FileName_u', 'FileName_v', 'FileName_w']
-        return [self._get_index(k) for k in keys]
+        def _is_filepath_key(key):
+            return 'filename' in key.lower()
+        return self._get_indices_if(_is_filepath_key)
 
     def _get_wind_file_line(self):
         type_ = int(self['WindType'])
+        filename_key_with_type = 'FilenameT{}'.format(type_)
         if type_ == 2:
-            return self._get_line('Filename')
+            try:
+                return self._get_line(filename_key_with_type)
+            except KeyError:
+                return self._get_line('Filename')
         elif type_ == 3:
-            return self._get_line('Filename', 2)
+            try:
+                return self._get_line(filename_key_with_type)
+            except KeyError:
+                return self._get_line('Filename', 2)
         elif type_ == 4:
-            return self._get_line('FilenameRoot')
+            try:
+                return self._get_line(filename_key_with_type)
+            except KeyError:
+                return self._get_line('FilenameRoot')
         else:
-            raise KeyError('Cannot find wind file in InflowWind, type_={}'.format(type_))
+            raise KeyError("Cannot find wind file in InflowWind, type_={}. " +
+                           "Set 'wind_type' parameter to an appropriate value".format(type_))
 
     def _set_wind_file(self, file):
         line = self._get_wind_file_line()
-        line.value = path.splitext(file)[0] if line.key == 'FilenameRoot' else file
+        line.value = path.splitext(file)[0] if (line.key == 'FilenameRoot' or line.key == 'FilenameT4') else file

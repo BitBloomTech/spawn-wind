@@ -37,6 +37,7 @@
   },
   "spec": {
     "output_start_time": 30,
+    "wind_type": "turbsim",
     "wind_shear": 0.14,
     "fatigue": {
       "policy:path": "fatigue",
@@ -64,6 +65,7 @@
         "pitch_manoeuvre_time": 40.0,
         "pitch_control_start_time": "!pitch_manoeuvre_time + 10.0",
         "simulation_time": 100,
+        "wind_type": "uniform",
         "wind_file": [
           "example_data/fast_input_files/wind_files/NWP4.0.wnd",
           "example_data/fast_input_files/wind_files/NWP12.0.wnd",
@@ -77,6 +79,7 @@
         "transient": "$Shutdown",
         "pitch_manoeuvre_time": 40.0,
         "simulation_time": 100,
+        "wind_type": "uniform",
         "wind_file": [
           "example_data/fast_input_files/wind_files/NWP4.0.wnd",
           "example_data/fast_input_files/wind_files/NWP12.0.wnd",
@@ -115,6 +118,7 @@
         "dlc1.4": {
           "policy:path": "dlc1.4",
           "simulation_time": 100,
+          "wind_type": "uniform",
           "wind_file": [
             "example_data/fast_input_files/wind_files/ECD+r-2.0.wnd",
             "example_data/fast_input_files/wind_files/ECD+r.wnd",
@@ -127,6 +131,7 @@
         "dlc1.5": {
           "policy:path": "dlc1.5",
           "simulation_time": 100,
+          "wind_type": "uniform",
           "wind_file": [
             "example_data/fast_input_files/wind_files/EWSV+12.0.wnd",
             "example_data/fast_input_files/wind_files/EWSV+24.0.wnd",
@@ -175,6 +180,7 @@
         "dlc2.3": {
           "policy:path": "dlc2.3/WS{wind_file:1}",
           "simulation_time": 100,
+          "wind_type": "uniform",
           "wind_file": [
             "example_data/fast_input_files/wind_files/EOGr-2.0.wnd",
             "example_data/fast_input_files/wind_files/EOGr+2.0.wnd",
@@ -192,6 +198,7 @@
           "transient": "$Startup",
           "pitch_manoeuvre_time": [40.0, 50.0, 60.0, 70.0],
           "pitch_control_start_time": "!pitch_manoeuvre_time + 10.0",
+          "wind_type": "uniform",
           "wind_file": [
             "example_data/fast_input_files/wind_files/EOGi.wnd",
             "example_data/fast_input_files/wind_files/EOGr-2.0.wnd",
@@ -204,6 +211,7 @@
           "transient": "$Startup",
           "pitch_manoeuvre_time": [40.0, 50.0, 60.0, 70.0],
           "pitch_control_start_time": "!pitch_manoeuvre_time + 10.0",
+          "wind_type": "uniform",
           "wind_file": [
             "example_data/fast_input_files/wind_files/EDC-i.wnd",
             "example_data/fast_input_files/wind_files/EDC+i.wnd",
@@ -221,6 +229,7 @@
         "simulation_time": 100,
         "transient": "$Shutdown",
         "pitch_manoeuvre_time": [40.0, 50.0, 60.0, 70.0],
+        "wind_type": "uniform",
         "wind_file": [
           "example_data/fast_input_files/wind_files/EOGr-2.0.wnd",
           "example_data/fast_input_files/wind_files/EOGr+2.0.wnd",

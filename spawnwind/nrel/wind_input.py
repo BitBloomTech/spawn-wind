@@ -67,6 +67,9 @@ class WindInput(NRELSimulationInput):
 
     @wind_gen_spawner.setter
     def wind_gen_spawner(self, spawner):
+        """
+        :param spawner: underlying spawner for wind generation tasks
+        """
         self._wind_gen_spawner = spawner
 
     @property

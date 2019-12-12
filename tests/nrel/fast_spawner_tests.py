@@ -21,16 +21,11 @@ from spawn.config.command_line import CommandLineConfiguration
 from spawn.schedulers.luigi import LuigiScheduler
 from spawn.parsers import SpecificationParser, DictSpecificationProvider
 
-from spawnwind.nrel import TurbsimSpawner, FastSimulationSpawner, FastInput, TurbsimInput, WindGenerationTask
+from spawnwind.nrel import TurbsimSpawner, FastSimulationSpawner, TurbsimInput, WindGenerationTask
 
 @pytest.fixture(scope='function')
-def turbsim_input(examples_folder):
-    return TurbsimInput.from_file(path.join(examples_folder, 'TurbSim.inp'))
-
-
-@pytest.fixture(scope='function')
-def fast_input(examples_folder):
-    return FastInput.from_file(path.join(examples_folder, 'NRELOffshrBsline5MW_Onshore.fst'))
+def turbsim_input(turbsim_input_file):
+    return TurbsimInput.from_file(turbsim_input_file)
 
 
 @pytest.mark.skipif('sys.platform != "win32"')
@@ -47,6 +42,7 @@ def test_can_spawn_turbsim_task(turbsim_input):
 def test_spawns_tests_requiring_wind_generation_when_wind_changed(turbsim_input, fast_input):
     temp_dir = tempfile.TemporaryDirectory()
     spawner = FastSimulationSpawner(fast_input, TurbsimSpawner(turbsim_input), temp_dir.name)
+    spawner.wind_type = 'bladed'  # ensure need to generate wind file
     task = spawner.spawn(path.join(temp_dir.name, 'a'), {})
     s2 = spawner.branch()
     s2.wind_speed = 8.0
@@ -62,6 +58,7 @@ def test_spawn_with_additional_directory_puts_tasks_in_new_folders(turbsim_input
     runs_dir_1 = path.join(tmpdir, 'runs', '1')
     runs_dir_2 = path.join(tmpdir, 'runs', '2')
     spawner = FastSimulationSpawner(fast_input, TurbsimSpawner(turbsim_input), tmpdir)
+    spawner.wind_type = 'bladed'  # ensure need to generate wind file
     spawner.wind_speed = 6.0
     task1 = spawner.spawn(runs_dir_1, {})
     spawner.wind_speed = 8.0
@@ -80,7 +77,7 @@ def test_runs_two_tasks_successfully_that_use_same_prerequisite(turbsim_input, f
             "initial_yaw": [-10.0, 10.0]
         }
     }
-    spec = SpecificationParser(DictSpecificationProvider(spec_dict), plugin_loader).parse()
+    spec = SpecificationParser(plugin_loader).parse(spec_dict)
     config = CommandLineConfiguration(workers=2, runner_type='process', prereq_outdir='prerequisites', outdir=tmpdir, local=True)
     scheduler = LuigiScheduler(config)
     scheduler.run(spawner, spec)
@@ -93,3 +90,25 @@ def test_does_not_create_wind_task_when_wind_file_is_set(turbsim_input, fast_inp
     assert len(task.requires()) == 0
     task.run()
     assert task.complete()
+
+@pytest.mark.skipif('sys.platform != "win32"')
+def test_run_succeeds_with_large_output_start_time_with_branching(turbsim_input, fast_input, tmpdir):
+    spawner = FastSimulationSpawner(fast_input, TurbsimSpawner(turbsim_input), tmpdir)
+    spawner.output_start_time = 60.0
+    spawner = spawner.branch()
+    spawner.simulation_time = 30.0  # total run time of 90s
+    spawner = spawner.branch()
+    spawner.wind_speed = 8.0
+    spawner.wind_type = 'bladed'
+    task = spawner.spawn(path.join(tmpdir, 'a'), {})
+    assert len(task.requires()) == 1
+    task.requires()[0].run()
+    task.run()
+    assert task.complete()
+
+def test_properties_of_spawner_sub_modules_are_independent_on_branches(turbsim_input, fast_input, tmpdir):
+    spawner = FastSimulationSpawner(fast_input, TurbsimSpawner(turbsim_input), tmpdir)
+    branch = spawner.branch()
+    spawner.initial_rotor_speed = 8.0
+    branch.initial_rotor_speed = 9.0
+    assert spawner.initial_rotor_speed != branch.initial_rotor_speed

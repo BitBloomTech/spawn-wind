@@ -22,13 +22,14 @@ from luigi import configuration
 
 from spawn.util.validation import validate_file, validate_dir
 
-from .simulation_input import TurbsimInput, FastInput
+from .simulation_input import TurbsimInput
+from .fast_input import Fast7Input, Fast8Input
 from .turbsim_spawner import TurbsimSpawner
 from .fast_spawner import FastSimulationSpawner
 from .tasks import WindGenerationTask, FastSimulationTask
 
 def create_spawner(
-        turbsim_exe, fast_exe, turbsim_base_file, fast_base_file,
+        turbsim_exe, fast_exe, turbsim_base_file, fast_base_file, fast_version,
         runner_type, turbsim_working_dir, fast_working_dir, outdir, prereq_outdir
     ):
     """
@@ -39,6 +40,7 @@ def create_spawner(
         from which wind file generation tasks are spawned
     :param fast_base_file: FAST input file (typically `.fst`) to which all parameter
         editions are made and from which simulations are spawned
+    :param fast_version: Major version of FAST {'v7', 'v8'}
     :param runner_type: default is `process`
     :param turbsim_working_dir: Directory in which TurbSim wind generation tasks are executed
     :param fast_working_dir: Directory in which FAST simulations are executed.
@@ -64,7 +66,13 @@ def create_spawner(
     luigi_config.set(FastSimulationTask.__name__, '_working_dir', fast_working_dir)
 
     wind_spawner = TurbsimSpawner(TurbsimInput.from_file(turbsim_base_file))
-    return FastSimulationSpawner(FastInput.from_file(fast_base_file), wind_spawner, path.join(outdir, prereq_outdir))
+    fast_input_cls = {
+        'v7': Fast7Input,
+        'v8': Fast8Input
+    }
+    return FastSimulationSpawner(fast_input_cls[fast_version].from_file(fast_base_file),
+                                 wind_spawner,
+                                 path.join(outdir, prereq_outdir))
 
 
 #pylint: disable=invalid-name

@@ -27,7 +27,7 @@ with open(path.join(_here, 'README.md')) as fp:
     README_CONTENTS = fp.read()
 
 install_requires = [
-    'spawn>=0.1',
+    'spawn==0.1.9',
     'wetb==0.0.9',
     'setuptools>=38.3'
 ]

@@ -17,9 +17,10 @@
 """Contains definitions for NREL :class:`SimulationInput`
 """
 from os import path
-import csv
 from spawn.simulation_inputs import SimulationInput
 from spawn.util.hash import string_hash
+from .nrel_input_line import NrelInputLine
+
 
 def _absolutise_path(line, root_dir, local_path):
     local_path = local_path.strip('"')
@@ -40,10 +41,12 @@ class NRELSimulationInput(SimulationInput):
         :type root_folder: path-like
         """
         self._input_lines = input_lines
+        self._root_folder = root_folder
         self._absolutise_paths(root_folder, self._lines_with_paths())
 
+    # pylint: disable=arguments-differ
     @classmethod
-    def from_file(cls, file_path):
+    def from_file(cls, file_path, **kwargs):
         """Creates a :class:`NRELSimulationInput` by loading a file
 
         :param file_path: The file path to load
@@ -55,7 +58,7 @@ class NRELSimulationInput(SimulationInput):
         with open(file_path, 'r') as fp:
             input_lines = fp.readlines()
         root_folder = path.abspath(path.split(file_path)[0])
-        return cls(input_lines, root_folder)
+        return cls([NrelInputLine(line) for line in input_lines], root_folder, **kwargs)
 
     def to_file(self, file_path):
         """Writes the contents of the input file to disk
@@ -65,7 +68,8 @@ class NRELSimulationInput(SimulationInput):
         """
         with open(file_path, 'w') as fp:
             for line in self._input_lines:
-                fp.write(line)
+                fp.write(str(line))
+        return file_path
 
     def hash(self):
         """Returns a hash of the contents of the file
@@ -73,34 +77,72 @@ class NRELSimulationInput(SimulationInput):
         :returns: The hash
         :rtype: str
         """
-        return string_hash('\n'.join(self._input_lines))
+        keys = [line.key for line in self._input_lines if line.key is not None]
+        values = [line.value for line in self._input_lines if line.value is not None]
+        return string_hash('\n'.join(keys + values))
+
+    def get_on_blade(self, base_key, blade_number):
+        """
+        Get property for a particular blade
+        :param base_key: Key excluding the blade number identifier
+        :param blade_number: Blade number as an integer
+        :return: Value of property
+        """
+        key = base_key + '({})'.format(blade_number)
+        return self[key]
+
+    def set_on_blade(self, base_key, blade_number, value):
+        """
+        Set property on a particular blade
+        :param base_key: Key excluding the blade number identifier
+        :param blade_number: Blade number as an integer
+        :param value: Value to set
+        """
+        key = base_key + '({})'.format(blade_number)
+        self[key] = value
 
     def __setitem__(self, key, value):
-        i, parts = self._get_index_and_parts(key)
-        self._input_lines[i] = self._input_lines[i].replace(parts[0], str(value).strip('"'))
+        self._get_line(key).value = str(value).strip('"')
 
     def __getitem__(self, key):
-        value = self._get_index_and_parts(key)[1][0]
-        return value.strip('"')
+        return self._get_line(key).value.strip('"')
 
-    @staticmethod
-    def _get_parts(line):
-        # CSV reader is the easiest way to interpret quoted strings encompassing spaces as one part
-        return next(csv.reader([line], delimiter=' ', quotechar='"', skipinitialspace=True))
+    def _get_line(self, key, nth_line=1):
+        """
+        Get input line based on key
+        :param key: Identifying key of input line
+        :param nth_line: If key is duplicated in input, return the line corresponding to the 'nth" occurrence of the key
+        :return: Line from self._input_lines container
+        """
+        generate = (line for line in self._input_lines if line.key == key)
+        try:
+            if nth_line == 1:
+                return next(generate)
+            else:
+                for _ in range(nth_line):
+                    line = next(generate)
+                return line
+        except StopIteration:
+            raise KeyError('parameter \'{}\' not found'.format(key))
 
-    def _get_index_and_parts(self, key):
+    def _get_index(self, key):
         for i, line in enumerate(self._input_lines):
-            parts = self._get_parts(line)
-            if len(parts) > 1 and parts[1] == key:
-                return i, parts
+            if line and line.key == key:
+                return i
         raise KeyError('parameter \'{}\' not found'.format(key))
+
+    def _get_indices_if(self, pred):
+        lines = []
+        for i, line in enumerate(self._input_lines):
+            if pred(line.key):
+                lines.append(i)
+        return lines
 
     def _absolutise_paths(self, root_folder, lines):
         for i in lines:
-            parts = self._get_parts(self._input_lines[i])
-            rel_path = parts[0].strip('"')
-            self._input_lines[i] = self._input_lines[i].replace(rel_path,
-                                                                path.abspath(path.join(root_folder, rel_path)))
+            rel_path = self._input_lines[i].value
+            if rel_path:
+                self._input_lines[i].value = path.abspath(path.join(root_folder, rel_path))
 
     @staticmethod
     def _lines_with_paths():
@@ -108,25 +150,6 @@ class NRELSimulationInput(SimulationInput):
 
 
 class TurbsimInput(NRELSimulationInput):
-    """Handles contents of TurbSim (FAST wind generation) input file"""
-
-
-class AerodynInput(NRELSimulationInput):
-    """Handles contents of Aerodyn (FAST aerodynamics) input file"""
-    def _lines_with_paths(self):
-        num_foils = int(self['NumFoil'])
-        index, _ = self._get_index_and_parts('FoilNm')
-        return range(index, index + num_foils)
-
-
-class FastInput(NRELSimulationInput):
-    """Handles contents of primary FAST input file"""
-    def _lines_with_paths(self):
-        def is_file_path(key):
-            return key in ['TwrFile', 'ADFile', 'ADAMSFile'] or 'BldFile' in key
-        lines = []
-        for i in range(len(self._input_lines)):
-            parts = self._get_parts(self._input_lines[i])
-            if len(parts) > 1 and is_file_path(parts[1]):
-                lines.append(i)
-        return lines
+    """
+    Handles contents of TurbSim (FAST wind generation) input file
+    """

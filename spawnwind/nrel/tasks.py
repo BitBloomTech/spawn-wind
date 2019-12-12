@@ -23,8 +23,10 @@ import luigi
 from spawn.tasks import SimulationTask
 
 class WindGenerationTask(SimulationTask):
-    """Implementation of :class:`SimulationTask` for TurbSim
     """
+    Implementation of :class:`SimulationTask` for TurbSim
+    """
+    _extension = luigi.Parameter(default='.wnd')
     def output(self):
         """The output of this task
 
@@ -37,10 +39,12 @@ class WindGenerationTask(SimulationTask):
     def wind_file_path(self):
         """The path to the wind file
         """
-        return super().run_name_with_path + '.wnd'
+        return super().run_name_with_path + self._extension
+
 
 class FastSimulationTask(SimulationTask):
-    """Implementation of :class:`SimulationTask` for FAST
+    """
+    Implementation of :class:`SimulationTask` for FAST
     """
     def output(self):
         """The output of this task

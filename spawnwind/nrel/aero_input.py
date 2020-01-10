@@ -26,9 +26,6 @@ class AeroInput(NRELSimulationInput):
     """
     Base class for managing inputs relating to aerodynamic settings
     """
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
     @property
     def wake_model_on(self):
         """
@@ -124,4 +121,3 @@ class Aerodyn15AeroInput(AeroInput):
         i = self._get_index('NumAFfiles')
         number_of_airfolis = int(self._input_lines[i].value)
         return list(range(i+1, i+number_of_airfolis+1))
-

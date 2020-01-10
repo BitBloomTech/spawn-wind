@@ -16,7 +16,7 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
 """Implementation of :class:`TaskSpawner` for aeroelastic simulations
 """
-from spawn.util import StringProperty, IntProperty, FloatProperty, ArrayProperty
+from spawn.util import StringProperty, IntProperty, FloatProperty, ArrayProperty, TypedProperty
 from spawn.spawners import TaskSpawner
 
 #pylint: disable=abstract-method
@@ -111,6 +111,10 @@ class AeroelasticSimulationSpawner(TaskSpawner):
         ),
         abstract=True
     )
+
+    # Aerodynamic settings
+    wake_model_on = TypedProperty(bool, doc='Whether wake/induction model is enabled', abstract=True)
+    dynamic_stall_on = TypedProperty(bool, doc='Whether dynamic stall is enabled', abstract=True)
 
     # Properties of turbine, for which setting is not supported
     number_of_blades = IntProperty(readonly=True, abstract=True)

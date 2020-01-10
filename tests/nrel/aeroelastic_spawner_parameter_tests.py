@@ -14,7 +14,7 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  USA
-from os import path
+from os import path, linesep
 import pytest
 import tempfile
 import pandas as pd
@@ -27,7 +27,12 @@ from spawnwind.nrel import Fast7Input, Fast8Input, TurbsimInput, FastSimulationS
 def run_and_get_results(spawner, path_):
     task = spawner.spawn(str(path_), {})
     luigi.build([task], local_scheduler=True, log_level='WARNING')
-    data, info = fast_io.load_output(task.output().path)
+    output_path = task.output().path
+    if not path.isfile(output_path):
+        with open(path.splitext(output_path)[0] + '.log') as fp:
+            log = fp.read()
+        raise ChildProcessError('FAST run did not produce output. Log:' + linesep + log)
+    data, info = fast_io.load_output(output_path)
     return pd.DataFrame(data, columns=info['attribute_names'])
 
 def _create_spawner(tmpdir, turbsim_input_file, fast_input_file, fast_input_cls):
@@ -94,6 +99,8 @@ def wind_keys(fast_version):
     ('pitch_control_start_time', float),
     ('yaw_manoeuvre_time', float),
     ('final_yaw', float),
+    ('wake_model_on', bool),
+    ('dynamic_stall_on', bool),
     ('number_of_blades', int)
 ])
 def test_property_type(spawner, property, type):
@@ -310,3 +317,17 @@ def test_runaway_at_high_wind_speed(spawner, tmpdir):
     spawner.set_blade_final_pitch(1, 90.0)
     res = run_and_get_results(spawner, tmpdir)
     assert res['BldPitch1'].iloc[-1] == pytest.approx(90.0)
+
+
+@pytest.mark.skipif('sys.platform != "win32"')
+def test_turn_off_dynamic_stall(spawner, tmpdir):
+    spawner.simulation_time = 2.0
+    spawner.dynamic_stall_on = False
+    run_and_get_results(spawner, tmpdir)
+
+
+@pytest.mark.skipif('sys.platform != "win32"')
+def test_turn_off_wake_model(spawner, tmpdir):
+    spawner.simulation_time = 2.0
+    spawner.wake_model_on = False
+    run_and_get_results(spawner, tmpdir)

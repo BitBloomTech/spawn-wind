@@ -18,6 +18,7 @@
 Handlers of Main FAST input file
 """
 from .wind_input import AerodynInput, InflowWindInput
+from .aero_input import AerodynPre15AeroInput, Aerodyn15AeroInput
 from .simulation_input import NRELSimulationInput
 from .servo_input import Fast7ServoInput, ServoDynInput
 
@@ -42,6 +43,14 @@ class FastInput(NRELSimulationInput):
         """
         :param wind_gen_spawner: Spawner of wind generation tasks
         :return: :class:`WindInput` instance for managing the contents of the input file for wind inflow
+        """
+        raise NotImplementedError()
+
+    def get_aero_input(self, wind_input):
+        """
+        :param wind_input: :class:`WindInput` instance, which will be used also for aerodynamic input if they are in the
+         same file such as in FAST 7
+        :return: :class:`AeroInput` instance for managing the aerodynamic setting inputs
         """
         raise NotImplementedError()
 
@@ -71,6 +80,9 @@ class Fast7Input(FastInput):
     def get_wind_input(self, wind_gen_spawner):
         return AerodynInput.from_file(self['ADFile'], wind_gen_spawner)
 
+    def get_aero_input(self, wind_input):
+        return AerodynPre15AeroInput.from_aerodyn_input(wind_input)
+
     def get_servodyn_input(self, blade_range):
         return Fast7ServoInput.from_nrel_input(self, blade_range)
 
@@ -89,6 +101,16 @@ class Fast8Input(FastInput):
 
     def get_wind_input(self, wind_gen_spawner):
         return InflowWindInput.from_file(self['InflowFile'], wind_gen_spawner)
+
+    def get_aero_input(self, _wind_input):
+        aerodyn_type = int(self['CompAero'])
+        if aerodyn_type == 1:
+            aero_input = AerodynPre15AeroInput.from_file(self['AeroFile'])
+            aero_input.key = 'AeroFile'  # so that this file is written by parent spawner
+            return aero_input
+        if aerodyn_type == 2:
+            return Aerodyn15AeroInput.from_file(self[Aerodyn15AeroInput.key])
+        return None
 
     def get_servodyn_input(self, blade_range):
         return ServoDynInput.from_nrel_input(NRELSimulationInput.from_file(self[ServoDynInput.key]), blade_range)

@@ -162,7 +162,7 @@ def test_operating_mode(spawner, tmpdir):
     res2 = run_and_get_results(spawner, path.join(tmpdir, 'b'))
     assert np.all(res2['BldPitch1'] == 90.0)
     assert np.all(res2['GenPwr'] <= 0.0)
-    assert np.all(abs(res2['RotSpeed']) <= 0.011)    # rotor speed is slightly non-zero due to drive-train flexibility
+    assert np.all(abs(res2['RotSpeed']) <= 0.02)    # rotor speed is slightly non-zero due to drive-train flexibility
     spawner.operation_mode = 'normal'
     spawner.initial_pitch = 0.0
     res3 = run_and_get_results(spawner, path.join(tmpdir, 'c'))

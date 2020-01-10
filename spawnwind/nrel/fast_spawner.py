@@ -196,6 +196,7 @@ class FastSimulationSpawner(AeroelasticSimulationSpawner):
         if mode in ['idling', 'parked']:
             self._servodyn_input['TPCOn'] = large_time  # fix pitch by turning pitch control off
             self.initial_rotor_speed = 0.0
+            self.wake_model_on = False  # Induction factors should be near zero and the model breaks down
         else:
             self._servodyn_input['TPCOn'] = 0.0
 

@@ -43,6 +43,7 @@ class FastSimulationSpawner(AeroelasticSimulationSpawner):
         self._prereq_outdir = prereq_outdir
         # non-arguments:
         self._wind_input = fast_input.get_wind_input(wind_spawner)
+        self._aero_input = fast_input.get_aero_input(self._wind_input)
         self._elastodyn_input = self._input.get_elastodyn_input()
         self._blade_range = list(range(1, self.get_number_of_blades()+1))
         self._servodyn_input = self._input.get_servodyn_input(self._blade_range)
@@ -68,6 +69,7 @@ class FastSimulationSpawner(AeroelasticSimulationSpawner):
             os.makedirs(path_)
         wind_tasks = self._wind_input.get_wind_gen_tasks(self._prereq_outdir, metadata)
         self._write_linked_module_input(self._wind_input, path_)
+        self._write_linked_module_input(self._aero_input, path_)
         self._write_linked_module_input(self._elastodyn_input, path_)
         self._write_linked_module_input(self._servodyn_input, path_)
         sim_input_file = path.join(path_, 'fast.input')
@@ -194,6 +196,7 @@ class FastSimulationSpawner(AeroelasticSimulationSpawner):
         if mode in ['idling', 'parked']:
             self._servodyn_input['TPCOn'] = large_time  # fix pitch by turning pitch control off
             self.initial_rotor_speed = 0.0
+            self.wake_model_on = False  # Induction factors should be near zero and the model breaks down
         else:
             self._servodyn_input['TPCOn'] = 0.0
 
@@ -344,6 +347,22 @@ class FastSimulationSpawner(AeroelasticSimulationSpawner):
     # pylint: disable=missing-docstring
     def set_wind_file(self, file):
         self._wind_input.wind_file = os.path.abspath(file)
+
+    # pylint: disable=missing-docstring
+    def get_wake_model_on(self):
+        return self._aero_input.wake_model_on
+
+    # pylint: disable=missing-docstring
+    def set_wake_model_on(self, on):
+        self._aero_input.wake_model_on = on
+
+    # pylint: disable=missing-docstring
+    def get_dynamic_stall_on(self):
+        return self._aero_input.dynamic_stall_on
+
+    # pylint: disable=missing-docstring
+    def set_dynamic_stall_on(self, on):
+        self._aero_input.dynamic_stall_on = on
 
     # Properties of turbine, for which setting is not supported
     def get_number_of_blades(self):

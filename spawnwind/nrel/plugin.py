@@ -104,7 +104,7 @@ def ETM(Iref, Vmean, wind_speed):
 
 
 #pylint: disable=invalid-name
-def InitialRotorSpeed(rated_rotor_speed, rated_wind_speed, wind_speed):
+def ApproxInitialRotorSpeed(rated_rotor_speed, rated_wind_speed, wind_speed):
     """
     Additional evaluator - approximately evaluates initial rotor speed
     :param rated_rotor_speed: Maximum operational rotor speed

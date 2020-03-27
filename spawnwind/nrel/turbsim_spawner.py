@@ -29,13 +29,13 @@ class TurbsimSpawner(WindGenerationSpawner):
     def __init__(self, turbsim_input):
         self._input = turbsim_input
 
-    def spawn(self, path, metadata):
-        wind_input_file = os_path.join(path, 'wind.ipt')
+    def spawn(self, path_, metadata):
+        wind_input_file = os_path.join(path_, 'wind.ipt')
         if not os_path.isdir(os_path.dirname(wind_input_file)):
             makedirs(os_path.dirname(wind_input_file))
         self._input.to_file(wind_input_file)
         extension = '.wnd' if self.wind_type == 'bladed' else '.bts'
-        wind_task = WindGenerationTask('wind ' + path,
+        wind_task = WindGenerationTask('wind ' + path_,
                                        _input_file_path=wind_input_file,
                                        _metadata=metadata,
                                        _extension=extension)

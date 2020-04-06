@@ -24,6 +24,10 @@
     "FinePitch": 0.0,
     "FeatherPitch": 90.0,
     "IdlingPitch": 90.0,
+    "RatedRotorSpeed": 11.753,
+    "WindSpeedOfRatedRotorSpeed": 9.4,
+    "RatedWindSpeed": 10.0,
+    "InitialPitchCoefficient": 6.45,
     "Startup": {
       "initial_pitch": "$FeatherPitch",
       "final_pitch": "$FinePitch",
@@ -47,13 +51,17 @@
         "wind_speed": "$WindRangeOperating",
         "turbulence_intensity": "#NTM($Iref, !wind_speed)",
         "turbulence_seed": "#repeat(@TurbulenceSeed, 6)",
-        "initial_yaw": "$YawRange"
+        "initial_yaw": "$YawRange",
+        "initial_rotor_speed": "#ApproxInitialRotorSpeed($RatedRotorSpeed, $WindSpeedOfRatedRotorSpeed, !wind_speed)",
+        "initial_pitch": "#ApproxInitialPitch($RatedWindSpeed, $FinePitch, $InitialPitchCoefficient, !wind_speed)"
       },
       "dlc2.4": {
         "policy:path": "dlc2.4/WS_{wind_speed}/yaw{initial_yaw:1}",
         "simulation_time": 600,
         "wind_speed": "$WindRangeOperating",
         "initial_yaw": [-20, 20],
+        "initial_rotor_speed": "#ApproxInitialRotorSpeed($RatedRotorSpeed, $WindSpeedOfRatedRotorSpeed, !wind_speed)",
+        "initial_pitch": "#ApproxInitialPitch($RatedWindSpeed, $FinePitch, $InitialPitchCoefficient, !wind_speed)",
         "turbulence_intensity": "#NTM($Iref, !wind_speed)",
         "turbulence_seed": "#repeat(@TurbulenceSeed, 3)"
       },
@@ -106,6 +114,8 @@
           "wind_speed": "$WindRangeOperating",
           "turbulence_seed": "#repeat(@TurbulenceSeed, 6)",
           "initial_yaw": "$YawRange",
+          "initial_rotor_speed": "#ApproxInitialRotorSpeed($RatedRotorSpeed, $WindSpeedOfRatedRotorSpeed, !wind_speed)",
+          "initial_pitch": "#ApproxInitialPitch($RatedWindSpeed, $FinePitch, $InitialPitchCoefficient, !wind_speed)",
           "dlc1.1": {
             "policy:path": "dlc1.1/WS_{wind_speed}/yaw{initial_yaw:1}",
             "turbulence_intensity": "#NTM($Iref, !wind_speed)"
@@ -147,6 +157,8 @@
           "policy:path": "dlc2.1/WS_{wind_speed}/yaw{initial_yaw:1}",
           "wind_speed": "$WindRangeOperating",
           "initial_yaw": "$YawRange",
+          "initial_rotor_speed": "#ApproxInitialRotorSpeed($RatedRotorSpeed, $WindSpeedOfRatedRotorSpeed, !wind_speed)",
+          "initial_pitch": "#ApproxInitialPitch($RatedWindSpeed, $FinePitch, $InitialPitchCoefficient, !wind_speed)",
           "grid_loss_time": 40.0,
           "turbulence_seed": "#repeat(@TurbulenceSeed, 4)",
           "_safety_factor": "$Normal"
@@ -155,6 +167,8 @@
           "policy:path": "dlc2.2/runaway/WS_{wind_speed}",
           "simulation_time": 100,
           "wind_speed": "#range(12, 24, 2)",
+          "initial_rotor_speed": "#ApproxInitialRotorSpeed($RatedRotorSpeed, $WindSpeedOfRatedRotorSpeed, !wind_speed)",
+          "initial_pitch": "#ApproxInitialPitch($RatedWindSpeed, $FinePitch, $InitialPitchCoefficient, !wind_speed)",
           "turbulence_seed": "#repeat(@TurbulenceSeed, 12)",
           "blade_pitch_manoeuvre_time[1]": 40.0,
           "pitch_manoeuvre_rate": 8.0,
@@ -167,12 +181,16 @@
           "wind_speed": "$WindRangeOperating",
           "turbulence_seed": "@TurbulenceSeed",
           "initial_yaw": "$YawRange360",
+          "initial_rotor_speed": "#ApproxInitialRotorSpeed($RatedRotorSpeed, $WindSpeedOfRatedRotorSpeed, !wind_speed)",
+          "initial_pitch": "#ApproxInitialPitch($RatedWindSpeed, $FinePitch, $InitialPitchCoefficient, !wind_speed)",
           "_safety_factor": "$Abnormal"
         },
         "dlc2.2b": {
           "policy:path": "dlc2.2/stuck/WS_{wind_speed}",
           "simulation_time": 600,
           "wind_speed": "$WindRangeOperating",
+          "initial_rotor_speed": "#ApproxInitialRotorSpeed($RatedRotorSpeed, $WindSpeedOfRatedRotorSpeed, !wind_speed)",
+          "initial_pitch": "#ApproxInitialPitch($RatedWindSpeed, $FinePitch, $InitialPitchCoefficient, !wind_speed)",
           "turbulence_seed": "#repeat(@TurbulenceSeed, 12)",
           "blade_initial_pitch[1]": "$FinePitch",
           "_safety_factor": "$Abnormal"
@@ -243,6 +261,8 @@
         "wind_speed": ["$Vrated_m2", "$Vrated_p2", "$Vout"],
         "turbulence_intensity": "#NTM($Iref, !wind_speed)",
         "turbulence_seed": "#repeat(@TurbulenceSeed, 12)",
+        "initial_rotor_speed": "#ApproxInitialRotorSpeed($RatedRotorSpeed, $WindSpeedOfRatedRotorSpeed, !wind_speed)",
+        "initial_pitch": "#ApproxInitialPitch($RatedWindSpeed, $FinePitch, $InitialPitchCoefficient, !wind_speed)",
         "_safety_factor": "$Normal"
       },
       "dlc6": {

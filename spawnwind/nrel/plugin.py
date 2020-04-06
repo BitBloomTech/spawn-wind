@@ -17,6 +17,7 @@
 """Defines the :mod:`mutliwindcalc` plugin for nrel
 """
 from os import path
+from math import sqrt
 
 from luigi import configuration
 
@@ -100,3 +101,33 @@ def ETM(Iref, Vmean, wind_speed):
     #pylint: disable=invalid-name
     c = 2.0
     return c * Iref * (0.072 * (Vmean / c + 3.0) * (wind_speed / c - 4) + 10.0) / wind_speed
+
+
+#pylint: disable=invalid-name
+def ApproxInitialRotorSpeed(rated_rotor_speed, rated_wind_speed, wind_speed):
+    """
+    Additional evaluator - approximately evaluates initial rotor speed
+    :param rated_rotor_speed: Maximum operational rotor speed
+    :param rated_wind_speed: Wind speed at which maximum rotor speed is reached
+    :param wind_speed: Mean wind speed of run at which to calculate initial rotor speed
+    :return: Approximate initial rotor speed for run
+    """
+    return min(rated_wind_speed, wind_speed) * rated_rotor_speed / rated_wind_speed
+
+
+#pylint: disable=invalid-name
+def ApproxInitialPitch(rated_wind_speed, fine_pitch_angle, coefficient, wind_speed):
+    """
+    Additional evaluator - approximately evaluates initial pitch angle in degrees according to (above rated):
+    pitch_angle = fine_pitch_angle + coefficient * sqrt(wind_speed - rated_wind_speed)
+    :param rated_wind_speed: Wind speed at which turbine starts to pitch above fine pitch
+    :param fine_pitch_angle: Pitch angle below rated
+    :param coefficient: Coefficient of increase in pitch angle above rated wind speed
+    :param wind_speed: (mean) Wind speed at which to evaluate initial pitch angle
+    :return: fine_pitch_angle if wind_speed <= rated_wind_speed
+    else fine_pitch_angle + coefficient * sqrt(wind_speed - rated_wind_speed)
+    """
+    if wind_speed <= rated_wind_speed:
+        return fine_pitch_angle
+    else:
+        return fine_pitch_angle + coefficient * sqrt(wind_speed - rated_wind_speed)

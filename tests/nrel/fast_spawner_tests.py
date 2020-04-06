@@ -112,3 +112,17 @@ def test_properties_of_spawner_sub_modules_are_independent_on_branches(turbsim_i
     spawner.initial_rotor_speed = 8.0
     branch.initial_rotor_speed = 9.0
     assert spawner.initial_rotor_speed != branch.initial_rotor_speed
+
+@pytest.mark.skipif('sys.platform != "win32"')
+def test_fails_with_invalid_parameter(turbsim_input, fast_input, tmpdir, plugin_loader):
+    spawner = FastSimulationSpawner(fast_input, TurbsimSpawner(turbsim_input), tmpdir)
+    spec_dict = {
+        "spec": {
+            "simulation_time": 1.0,
+            "yaw_angle": 10.0
+        }
+    }
+    spec = SpecificationParser(plugin_loader).parse(spec_dict)
+    config = CommandLineConfiguration(workers=2, runner_type='process', prereq_outdir='prerequisites', outdir=tmpdir, local=True)
+    scheduler = LuigiScheduler(config)
+    scheduler.run(spawner, spec)

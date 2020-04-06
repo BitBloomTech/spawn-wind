@@ -26,6 +26,8 @@ def test_successfully_inspects_iec_spec(example_data_folder):
     with open(input_path) as fp:
         spec = json.load(fp)
 
+    stats = spawn.stats(spec, {'format': 'json'})
+    assert stats['leaf_count'] == 1591
     inspection = spawn.inspect(spec, {'format': 'json'})
     assert isinstance(inspection, dict)
     assert 'spec' in inspection

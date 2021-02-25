@@ -46,7 +46,8 @@ class NRELSimulationInput(SimulationInput):
         self._root_folder = root_folder
         self._key_separator = key_separator
         self._nested_inputs = {}
-        self._absolutise_paths(root_folder, self._lines_with_paths())
+        self._nested_input_types = {}  # updated by sub-classes
+        self._absolutise_paths(self._lines_with_paths())
 
     # pylint: disable=arguments-differ
     @classmethod
@@ -84,6 +85,19 @@ class NRELSimulationInput(SimulationInput):
         keys = [line.key for line in self._input_lines if line.key is not None]
         values = [line.value for line in self._input_lines if line.value is not None]
         return string_hash('\n'.join(keys + values))
+
+    def set_nested_input_type(self, key, type_):
+        """Set a type for when nested input objects are created
+
+        :param key: key in input file e.g. 'EDFile'
+        :type key: str
+        :param type_: the type in which to create the nested input, e.g. `ElastoDynInput`, must inherit from
+         `NRELSimulationInput`
+        :type type_: type
+        """
+        if not issubclass(type_, NRELSimulationInput):
+            raise TypeError("Nested input types must inherit from `NRELSimulationInput`")
+        self._nested_input_types[key] = type_
 
     def get_on_blade(self, base_key, blade_number):
         """
@@ -140,7 +154,8 @@ class NRELSimulationInput(SimulationInput):
 
     def _get_nested_input(self, line):
         if line.key not in self._nested_inputs:
-            self._nested_inputs[line.key] = NRELSimulationInput.from_file(line.value)
+            type_ = self._nested_input_types.get(line.key, NRELSimulationInput)
+            self._nested_inputs[line.key] = type_.from_file(self._abspath(line.value))
         return self._nested_inputs[line.key]
 
     def _get_index(self, key):
@@ -156,11 +171,14 @@ class NRELSimulationInput(SimulationInput):
                 lines.append(i)
         return lines
 
-    def _absolutise_paths(self, root_folder, lines):
+    def _absolutise_paths(self, lines):
         for i in lines:
             rel_path = self._input_lines[i].value
             if rel_path:
-                self._input_lines[i].value = path.abspath(path.join(root_folder, rel_path))
+                self._input_lines[i].value = path.abspath(path.join(self._root_folder, rel_path))
+
+    def _abspath(self, rel_path):
+        return path.abspath(path.join(self._root_folder, rel_path))
 
     @staticmethod
     def _lines_with_paths():

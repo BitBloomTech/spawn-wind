@@ -75,11 +75,19 @@ def fast_input_folder(fast_version):
     return path.join(_example_data_folder, 'fast_input_files', fast_version)
 
 @pytest.fixture(scope='module')
-def fast_input_file(fast_version, fast_input_folder):
+def fast_v7_file_path(base_fast_input_folder):
+    return path.join(base_fast_input_folder, 'v7', 'NRELOffshrBsline5MW_Onshore.fst')
+
+@pytest.fixture(scope='module')
+def fast_v8_file_path(base_fast_input_folder):
+    return path.join(base_fast_input_folder, 'v8', 'NREL5MW.fst')
+
+@pytest.fixture(scope='module')
+def fast_input_file(fast_version, fast_v7_file_path, fast_v8_file_path):
     if fast_version == 'v7':
-        return path.join(fast_input_folder, 'NRELOffshrBsline5MW_Onshore.fst')
+        return fast_v7_file_path
     elif fast_version == 'v8':
-        return path.join(fast_input_folder, 'NREL5MW.fst')
+        return fast_v8_file_path
 
 @pytest.fixture(scope='function')
 def fast_input(fast_version, fast_input_file):

@@ -94,6 +94,13 @@ class Fast8Input(FastInput):
     """
     Manager for main FAST input file v8
     """
+    def __init__(self, input_lines, root_folder):
+        super().__init__(input_lines, root_folder)
+        self._nested_input_types.update({
+            'EDFile': ElastoDynInput,
+            'AeroFile': self._get_aero_input_type()
+        })
+
     def _lines_with_paths(self):
         def is_file_path(key):
             return 'File' in key and key != 'OutFileFmt'
@@ -103,12 +110,12 @@ class Fast8Input(FastInput):
         return InflowWindInput.from_file(self['InflowFile'], wind_gen_spawner)
 
     def get_aero_input(self, _wind_input):
-        aerodyn_type = int(self['CompAero'])
-        if aerodyn_type == 1:
+        aerodyn_type = self._get_aero_input_type()
+        if aerodyn_type == AerodynPre15AeroInput:
             aero_input = AerodynPre15AeroInput.from_file(self['AeroFile'])
             aero_input.key = 'AeroFile'  # so that this file is written by parent spawner
             return aero_input
-        if aerodyn_type == 2:
+        if aerodyn_type == Aerodyn15AeroInput:
             return Aerodyn15AeroInput.from_file(self[Aerodyn15AeroInput.key])
         return None
 
@@ -117,3 +124,11 @@ class Fast8Input(FastInput):
 
     def get_elastodyn_input(self):
         return ElastoDynInput.from_file(self[ElastoDynInput.key])
+
+    def _get_aero_input_type(self):
+        aerodyn_type = int(self['CompAero'])
+        if aerodyn_type == 1:
+            return AerodynPre15AeroInput
+        if aerodyn_type == 2:
+            return Aerodyn15AeroInput
+        raise ValueError("Invalid 'CompAero' value {}".format(aerodyn_type))

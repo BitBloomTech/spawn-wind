@@ -133,6 +133,16 @@ def test_hash_is_different_for_different_inputs():
     assert input1.hash() != input2.hash()
 
 
-def test_can_set_chained_path(fast8_input):
-    fast8_input['EDFile.NacYaw'] = 30.0
-    assert fast8_input['EDFile.NacYaw'] == '30.0'
+@pytest.mark.parametrize('key,value', [
+    ('EDFile.NacYaw', 30.0),
+    ('AeroFile.AirDens', 1.1)
+])
+def test_can_set_chained_path(fast8_input, key, value):
+    fast8_input[key] = value
+    assert fast8_input[key] == str(value)
+
+
+def test_can_set_bespoke_nested_type(fast_v8_file_path):
+    input_ = NRELSimulationInput.from_file(fast_v8_file_path)
+    input_.set_nested_input_type('EDFile', ElastoDynInput)
+    assert int(input_['EDFile.BldNodes']) == 17

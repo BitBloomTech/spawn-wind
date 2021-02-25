@@ -132,3 +132,7 @@ def test_hash_is_different_for_different_inputs():
     input2 = NRELSimulationInput([NrelInputLine(line) for line in lines], '')
     assert input1.hash() != input2.hash()
 
+
+def test_can_set_chained_path(fast8_input):
+    fast8_input['EDFile.NacYaw'] = 30.0
+    assert fast8_input['EDFile.NacYaw'] == '30.0'

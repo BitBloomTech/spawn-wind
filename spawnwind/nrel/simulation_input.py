@@ -32,16 +32,20 @@ class NRELSimulationInput(SimulationInput):
     Handles contents of input files for NREL's aeroelastic modules such as FAST, AeroDyn and TurbSim.
     These tend to be of a whitespace separated {value|key} format with newlines separating key:value pairs
     """
-    def __init__(self, input_lines, root_folder):
+    def __init__(self, input_lines, root_folder, key_separator='.'):
         """Initialises :class:`NRELSimulationInput`
 
         :param input_lines: The lines of the input file
         :type input_lines: list
         :param root_folder: The root folder containing the input file
         :type root_folder: path-like
+        :param key_separator: the character used to separate keys in a chain for nested access e.g. 'EDFile.NacYaw'
+        :type key_separator: str
         """
         self._input_lines = input_lines
         self._root_folder = root_folder
+        self._key_separator = key_separator
+        self._nested_inputs = {}
         self._absolutise_paths(root_folder, self._lines_with_paths())
 
     # pylint: disable=arguments-differ
@@ -101,11 +105,20 @@ class NRELSimulationInput(SimulationInput):
         key = base_key + '({})'.format(blade_number)
         self[key] = value
 
-    def __setitem__(self, key, value):
-        self._get_line(key).value = str(value).strip('"')
-
     def __getitem__(self, key):
-        return self._get_line(key).value.strip('"')
+        parts = key.split(self._key_separator, maxsplit=1)
+        line = self._get_line(parts[0])
+        if len(parts) > 1:
+            return self._get_nested_input(line)[parts[1]]
+        return line.value.strip('"')
+
+    def __setitem__(self, key, value):
+        parts = key.split(self._key_separator, maxsplit=1)
+        line = self._get_line(parts[0])
+        if len(parts) > 1:
+            self._get_nested_input(line)[parts[1]] = value
+        else:
+            line.value = str(value).strip('"')
 
     def _get_line(self, key, nth_line=1):
         """
@@ -124,6 +137,11 @@ class NRELSimulationInput(SimulationInput):
                 return line
         except StopIteration:
             raise KeyError('parameter \'{}\' not found'.format(key))
+
+    def _get_nested_input(self, line):
+        if line.key not in self._nested_inputs:
+            self._nested_inputs[line.key] = NRELSimulationInput.from_file(line.value)
+        return self._nested_inputs[line.key]
 
     def _get_index(self, key):
         for i, line in enumerate(self._input_lines):

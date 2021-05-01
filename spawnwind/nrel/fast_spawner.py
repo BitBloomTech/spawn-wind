@@ -201,6 +201,14 @@ class FastSimulationSpawner(AeroelasticSimulationSpawner):
             self._servodyn_input['TPCOn'] = 0.0
 
     # pylint: disable=missing-docstring
+    def get_controller_input_file(self):
+        return self._servodyn_input['DLL_InFile']
+
+    # pylint: disable=missing-docstring
+    def set_controller_input_file(self, input_file):
+        self._servodyn_input['DLL_InFile'] = input_file
+
+    # pylint: disable=missing-docstring
     def get_pitch_manoeuvre_time(self):
         raise NotImplementedError('Incapable of determining pitch manoeuvre time for all blades at once')
 

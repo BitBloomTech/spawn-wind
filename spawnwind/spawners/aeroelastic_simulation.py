@@ -61,6 +61,10 @@ class AeroelasticSimulationSpawner(TaskSpawner):
         """,
         abstract=True
     )
+    controller_input_file = StringProperty(
+        doc='Input file for external controller',
+        abstract=True
+    )
 
     # manoeuvres
     pitch_manoeuvre_time = FloatProperty(
